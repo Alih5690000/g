@@ -145,7 +145,7 @@ void Vector_Resize(Vector* v,int newsize){
     
 }
 
-void Vector_erease(Vector* v,int pos){
+void Vector_erase(Vector* v,int pos){
     if (pos>=v->__pos || pos<0){
         const char* mes="Invalid pos to erease: Vector";
         memcpy(__errbuf,mes,strlen(mes)+1);
