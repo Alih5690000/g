@@ -6,6 +6,23 @@ void quit(){
     emscripten_cancel_main_loop();
 }
 
+typedef struct Sprite{
+    SDL_FRect rect;
+    void (*update)();
+} Sprite;
+
+typedef struct Enemy{
+    Sprite base;
+} Enemy;
+
+typedef struct Weapon{
+    Sprite* owner;
+    void(*whenChosen)(Weapon*);
+    void(*onFire)(Weapon*);
+    void(*onReload)(Weapon*);
+    void(*asItem)(Weapon*);
+} Weapon;
+
 float dt;
 int start,end;
 
