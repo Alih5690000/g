@@ -62,7 +62,10 @@ void Sword_onFire(Sword* o,Vector* ens){
     SDL_FRect ownerRect=o->base.owner->rect;
     SDL_FRect dmgRect={ownerRect.x-25,ownerRect.y,ownerRect.w+50,ownerRect.h};
     VECTOR_FOR(ens,i,Sprite){
-        if (SDL_HasIntersection(&dmgRect,&i->rect)) Vector_erase(ens,i);
+        if (SDL_HasIntersection(&dmgRect,&i->rect)) {
+            i->destroy(i);
+            Vector_erase(ens,i);
+        }
     }
     o->animOn=1;
     o->angle=360.f;
@@ -82,7 +85,7 @@ void Sword_update(Sword* o){
     SDL_RenderCopyExF(renderer,o->txt,&(SDL_FPoint){drawRect.w,drawRect.h},
         &drawRect,o->angle,NULL,SDL_FLIP_NONE);
 }
-
+//not ready
 void* Sword_create(Sprite* owner){
     Sword* res=malloc(sizeof(Sword));
     res->angle=0.f;
