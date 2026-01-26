@@ -8,8 +8,25 @@ void quit(){
 
 typedef struct Sprite{
     SDL_FRect rect;
-    void (*update)();
+    SDL_Texture* txt;
+    void (*update)(void*);
 } Sprite;
+
+typedef struct Wall{
+    Sprite base;
+} Wall;
+
+void Wall_update(Wall* o){
+    SDL_SetRenderDrawColor(renderer,100,100,100,255);
+    SDL_RenderFillRectF(renderer,&o->base.rect);
+}
+
+void* Wall_create(SDL_FRect rect){
+    Wall* res=malloc(sizeof(Wall));
+    res->base.rect=rect;
+    res->base.update=Wall_update;
+    return res;
+}
 
 typedef struct Enemy{
     Sprite base;
@@ -17,11 +34,53 @@ typedef struct Enemy{
 
 typedef struct Weapon{
     Sprite* owner;
-    void(*whenChosen)(Weapon*);
-    void(*onFire)(Weapon*);
-    void(*onReload)(Weapon*);
-    void(*asItem)(Weapon*);
+    void(*update)(void*);
+    void(*onFire)(void*,Vector*);
+    void(*asItem)(void*,SDL_FRect*);
 } Weapon;
+
+typedef struct Sword{
+    Weapon base;
+    float angle;
+    int animOn;
+    float cd;
+    SDL_Texture* txt;
+} Sword;
+
+//ens vector of Sprites
+void Sword_onFire(Sword* o,Vector* ens){
+    SDL_FRect ownerRect=o->base.owner->rect;
+    SDL_FRect dmgRect={ownerRect.x-25,ownerRect.y,ownerRect.w+50,ownerRect.h};
+    VECTOR_FOR(ens,i,Sprite){
+        if (SDL_HasIntersection(&dmgRect,&i->rect)) Vector_erase(ens,i);
+    }
+    o->animOn=1;
+    o->angle=360.f;
+}
+
+void Sword_update(Sword* o){
+    SDL_FRect ownerRect=o->base.owner->rect;
+    SDL_FRect drawRect={ownerRect.x+ownerRect.w-75.f,ownerRect.y+(ownerRect.h/2.f),
+        10.f,75.f};
+    if (o->animOn){
+        o->angle-=180*dt;
+        if (o->angle<0.f){
+            o->angle=0;
+            o->animOn=0;
+        }
+    }
+    SDL_RenderCopyExF(renderer,o->txt,&(SDL_FPoint){drawRect.w,drawRect.h},
+        &drawRect,o->angle,NULL,SDL_FLIP_NONE);
+}
+
+void* Sword_create(Sprite* owner){
+    Sword* res=malloc(sizeof(Sword));
+    res->angle=0.f;
+    res->animOn=0;
+    res->txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_STATIC,75,10);
+    res->cd=0.f;
+}
 
 float dt;
 int start,end;
@@ -44,6 +103,7 @@ float gravity=900.f;
 float plr_dshSpeed=100.f;
 int plr_canDash=1;
 Vector* walls;
+Vector* sprites;
 
 void loop(){
 
@@ -123,6 +183,9 @@ void loop(){
         VECTOR_FOR(walls,i,SDL_FRect){
             SDL_RenderFillRectF(renderer,i);
         }
+        VECTOR_FOR(sprites,i,Sprite){
+            i->update(i);
+        }
     }
 
     SDL_SetRenderTarget(renderer,NULL);
@@ -133,6 +196,7 @@ void loop(){
 
 int main(){
     walls=CreateVector(sizeof(SDL_FRect));
+    sprites=CreateVector(sizeof(Sprite));
     {
         Vector_PushBack(walls,&(SDL_FRect){0.f,700.f,1000.f,100.f});
         Vector_PushBack(walls,&(SDL_FRect){400.f,600.f,100.f,25.f});
