@@ -10,6 +10,7 @@ typedef struct Sprite{
     SDL_FRect rect;
     SDL_Texture* txt;
     void (*update)(void*);
+    void (*destroy)(void*)
 } Sprite;
 
 typedef struct Wall{
@@ -27,6 +28,9 @@ void* Wall_create(SDL_FRect rect){
     res->base.update=Wall_update;
     return res;
 }
+void Wall_destroy(Wall* o){
+    free(o);
+}
 
 typedef struct Enemy{
     Sprite base;
@@ -37,6 +41,7 @@ typedef struct Weapon{
     void(*update)(void*);
     void(*onFire)(void*,Vector*);
     void(*asItem)(void*,SDL_FRect*);
+    void(*destroy)(void*);
 } Weapon;
 
 typedef struct Sword{
@@ -46,6 +51,11 @@ typedef struct Sword{
     float cd;
     SDL_Texture* txt;
 } Sword;
+
+void Sword_destroy(Sword* o){
+    SDL_DestroyTexture(o->txt);
+    free(o);
+}
 
 //ens vector of Sprites
 void Sword_onFire(Sword* o,Vector* ens){
