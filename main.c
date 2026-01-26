@@ -27,7 +27,7 @@ typedef struct Weapon{
     Sprite* owner;
     void(*update)(void*);
     void(*onFire)(void*,Vector*);
-    void(*asItem)(void*,SDL_FPoint);
+    void(*asItem)(void*,SDL_FPoint*);
     void(*destroy)(void*);
 } Weapon;
 
@@ -78,9 +78,9 @@ void Sword_update(void* obj){
         SDL_FLIP_NONE);
 }
 
-void Sword_asItem(void* obj,SDL_FPoint point){
+void Sword_asItem(void* obj,SDL_FPoint* point){
     Sword* o=(Sword*)obj;
-    SDL_FRect rect={point.x,point.y,10,75};
+    SDL_FRect rect={point->x,point->y,10,75};
     SDL_RenderCopyF(renderer,o->txt,NULL,&rect);
 }
 
