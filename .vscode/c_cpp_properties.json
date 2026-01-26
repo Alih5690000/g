@@ -1,0 +1,19 @@
+{
+  "configurations": [
+    {
+      "name": "Emscripten",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "/workspaces/g/emsdk/upstream/emscripten/system/include",           
+        "/workspaces/g/emsdk/upstream/emscripten/cache/sysroot/include",     
+        "/workspaces/g/emsdk/upstream/emscripten/cache/sysroot/include/SDL2", 
+        "."
+      ],
+      "defines": ["__EMSCRIPTEN__"],
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "linux-clang-x64"
+    }
+  ],
+  "version": 4
+}

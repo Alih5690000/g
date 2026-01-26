@@ -1,0 +1,11 @@
+emcc main.c \
+  -o index.html \
+  -s USE_SDL=2 \
+  -s USE_SDL_IMAGE=2 \
+  -s USE_SDL_TTF=2 \
+  -s USE_SDL_MIXER=2 \
+  -s SDL2_IMAGE_FORMATS='["png","jpg","jpeg","bmp"]' \
+  -s SDL2_MIXER_FORMATS='["wav","ogg","mp3"]' \
+  -s ALLOW_MEMORY_GROWTH=1 \
+  --preload-file assets \
+  -O2 && python -m http.server 8000
