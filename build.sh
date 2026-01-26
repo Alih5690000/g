@@ -7,5 +7,6 @@ emcc main.c \
   -s SDL2_IMAGE_FORMATS='["png","jpg","jpeg","bmp"]' \
   -s SDL2_MIXER_FORMATS='["wav","ogg","mp3"]' \
   -s ALLOW_MEMORY_GROWTH=1 \
+  -s ASSERTIONS=1 \
   --preload-file assets \
   -O2 && python -m http.server 8000

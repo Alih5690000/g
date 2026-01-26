@@ -2,6 +2,12 @@
 #include <SDL.h>
 #include "vec.c"
 
+SDL_Texture* Wtexture;
+SDL_Renderer* renderer;
+SDL_Window* window;
+float dt;
+int start,end;
+
 void quit(){
     emscripten_cancel_main_loop();
 }
@@ -10,27 +16,8 @@ typedef struct Sprite{
     SDL_FRect rect;
     SDL_Texture* txt;
     void (*update)(void*);
-    void (*destroy)(void*)
+    void (*destroy)(void*);
 } Sprite;
-
-typedef struct Wall{
-    Sprite base;
-} Wall;
-
-void Wall_update(Wall* o){
-    SDL_SetRenderDrawColor(renderer,100,100,100,255);
-    SDL_RenderFillRectF(renderer,&o->base.rect);
-}
-
-void* Wall_create(SDL_FRect rect){
-    Wall* res=malloc(sizeof(Wall));
-    res->base.rect=rect;
-    res->base.update=Wall_update;
-    return res;
-}
-void Wall_destroy(Wall* o){
-    free(o);
-}
 
 typedef struct Enemy{
     Sprite base;
@@ -40,7 +27,7 @@ typedef struct Weapon{
     Sprite* owner;
     void(*update)(void*);
     void(*onFire)(void*,Vector*);
-    void(*asItem)(void*,SDL_FRect*);
+    void(*asItem)(void*,SDL_FPoint);
     void(*destroy)(void*);
 } Weapon;
 
@@ -52,26 +39,31 @@ typedef struct Sword{
     SDL_Texture* txt;
 } Sword;
 
-void Sword_destroy(Sword* o){
+void Sword_destroy(void* obj){
+    Sword* o=(Sword*)obj;
     SDL_DestroyTexture(o->txt);
     free(o);
 }
 
 //ens vector of Sprites
-void Sword_onFire(Sword* o,Vector* ens){
+void Sword_onFire(void* obj,Vector* ens){
+    Sword* o=(Sword*)obj;
     SDL_FRect ownerRect=o->base.owner->rect;
     SDL_FRect dmgRect={ownerRect.x-25,ownerRect.y,ownerRect.w+50,ownerRect.h};
+    int j=0;
     VECTOR_FOR(ens,i,Sprite){
-        if (SDL_HasIntersection(&dmgRect,&i->rect)) {
+        if (SDL_HasIntersectionF(&dmgRect,&i->rect)) {
             i->destroy(i);
-            Vector_erase(ens,i);
+            Vector_erase(ens,j);
         }
+        j++;
     }
     o->animOn=1;
     o->angle=360.f;
 }
 
-void Sword_update(Sword* o){
+void Sword_update(void* obj){
+    Sword* o=(Sword*)obj;
     SDL_FRect ownerRect=o->base.owner->rect;
     SDL_FRect drawRect={ownerRect.x+ownerRect.w-75.f,ownerRect.y+(ownerRect.h/2.f),
         10.f,75.f};
@@ -82,10 +74,16 @@ void Sword_update(Sword* o){
             o->animOn=0;
         }
     }
-    SDL_RenderCopyExF(renderer,o->txt,&(SDL_FPoint){drawRect.w,drawRect.h},
-        &drawRect,o->angle,NULL,SDL_FLIP_NONE);
+    SDL_RenderCopyExF(renderer,o->txt,NULL,&drawRect,o->angle,&(SDL_FPoint){drawRect.w,drawRect.h},
+        SDL_FLIP_NONE);
 }
-//not ready
+
+void Sword_asItem(void* obj,SDL_FPoint point){
+    Sword* o=(Sword*)obj;
+    SDL_FRect rect={point.x,point.y,10,75};
+    SDL_RenderCopyF(renderer,o->txt,NULL,&rect);
+}
+
 void* Sword_create(Sprite* owner){
     Sword* res=malloc(sizeof(Sword));
     res->angle=0.f;
@@ -93,10 +91,13 @@ void* Sword_create(Sprite* owner){
     res->txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_STATIC,75,10);
     res->cd=0.f;
+    res->base.owner=owner;
+    res->base.asItem=Sword_asItem;
+    res->base.destroy=Sword_destroy;
+    res->base.onFire=Sword_onFire;
+    res->base.update=Sword_update;
+    return res;
 }
-
-float dt;
-int start,end;
 
 void HandleDelta(){
     start=SDL_GetTicks();
@@ -104,9 +105,7 @@ void HandleDelta(){
     end=start;
 }
 
-SDL_Texture* Wtexture;
-SDL_Renderer* renderer;
-SDL_Window* window;
+
 SDL_FRect plr={0.f,0.f,50.f,50.f};
 float plr_dy=0.f;
 float plr_dx=0.f;
@@ -115,6 +114,8 @@ float plr_speed=300.f;
 float gravity=900.f;
 float plr_dshSpeed=100.f;
 int plr_canDash=1;
+Weapon* plr_wep;
+
 Vector* walls;
 Vector* sprites;
 
@@ -152,6 +153,11 @@ void loop(){
     if (!keys[SDL_SCANCODE_E]){
         plr_canDash=1;
     }
+    Uint32 mstate=SDL_GetMouseState(NULL,NULL);
+    if (mstate & SDL_BUTTON_LMASK){
+        plr_wep->onFire((void*)plr_wep,sprites);
+    }
+    plr_wep->update((void*)plr_wep);
 
     plr.x+=plr_dx;
 
@@ -197,7 +203,7 @@ void loop(){
             SDL_RenderFillRectF(renderer,i);
         }
         VECTOR_FOR(sprites,i,Sprite){
-            i->update(i);
+            i->update((void*)i);
         }
     }
 
