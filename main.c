@@ -24,6 +24,8 @@ float plr_dx=0.f;
 int plr_inAir=1;
 float plr_speed=300.f;
 float gravity=900.f;
+float plr_dshSpeed=100.f;
+int plr_canDash=1;
 Vector* walls;
 
 void loop(){
@@ -40,29 +42,39 @@ void loop(){
 
     if (keys[SDL_SCANCODE_W]){
         if(!plr_inAir){
-            plr_dy=350.f;
+            plr_dy=500.f;
             plr_inAir=1;
         }
     }
 
-    plr_dx=plr_speed*dt;
+    plr_dx=0.f;
 
     if (keys[SDL_SCANCODE_A]){
-        plr.x-=plr_dx;
-        VECTOR_FOR(walls,i,SDL_FRect){
-            if (SDL_HasIntersectionF(&plr,i)){
-                plr.x=i->x+i->w;
-            }
-        }
+        plr_dx=plr_speed*dt*-1;
     }
     if (keys[SDL_SCANCODE_D]){
-        plr.x+=plr_dx;
-        VECTOR_FOR(walls,i,SDL_FRect){
-            if (SDL_HasIntersectionF(&plr,i)){
+        plr_dx=plr_speed*dt;
+    }
+    if (keys[SDL_SCANCODE_E] && plr_canDash){
+        plr_canDash=0;
+        plr_dx=plr_dshSpeed*(plr_dx<0 ? -1 : 1);
+    }
+    if (!keys[SDL_SCANCODE_E]){
+        plr_canDash=1;
+    }
+
+    plr.x+=plr_dx;
+
+    VECTOR_FOR(walls,i,SDL_FRect){
+        if (SDL_HasIntersectionF(&plr,i)){
+            if (plr_dx>0)
                 plr.x=i->x-plr.w;
-            }
+            else
+                plr.x=i->x+i->w;
         }
     }
+
+    plr_inAir=1;
 
     if (plr_inAir){
         plr_dy-=gravity*dt;
@@ -71,14 +83,14 @@ void loop(){
 
     VECTOR_FOR(walls,i,SDL_FRect){
         if (SDL_HasIntersectionF(&plr,i)){
-            if (plr.y>i->y){
+            if (plr.y<=i->y){
                 plr.y=i->y-plr.h;
+                plr_inAir=0;
             }
             else{
                 plr.y=i->y+i->h;
             }
             plr_dy=0;
-            plr_inAir=0;
 
         }
     }
