@@ -18,6 +18,7 @@ typedef struct Sprite{
     SDL_Texture* txt;
     void (*update)(void*);
     void (*destroy)(void*);
+    void(*reconstruct)(void*);
 } Sprite;
 
 typedef struct Enemy{
@@ -30,6 +31,7 @@ typedef struct Weapon{
     void(*onFire)(void*,Vector*);
     void(*asItem)(void*,SDL_FPoint*);
     void(*destroy)(void*);
+    void(*reconstruct)(void*);
 } Weapon;
 
 typedef struct Sword{
@@ -86,6 +88,22 @@ void Sword_asItem(void* obj,SDL_FPoint* point){
     SDL_RenderCopyF(renderer,o->txt,NULL,&rect);
 }
 
+void Sword_reconstruct(void* obj){
+    Sword* o=(Sword*)obj;
+    o->txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_STREAMING,75,10);
+    void* pixels;
+    int pitch;
+    SDL_LockTexture(o->txt,NULL,&pixels,&pitch);
+    for (int i=0;i<10;i++){
+        Uint32* row=(Uint32*)((Uint8*)pixels+(pitch*i));
+        for (int j=0;j<75;j++){
+            row[j]=0x00FF00FF;
+        }
+    }
+    SDL_UnlockTexture(o->txt);
+}
+
 void* Sword_create(Sprite* owner){
     Sword* res=malloc(sizeof(Sword));
     res->angle=0.f;
@@ -140,6 +158,17 @@ void loop(void* args){
     while (SDL_PollEvent(&e)){
         if (e.type==SDL_QUIT)
             quit();
+        if (e.type == SDL_RENDER_DEVICE_RESET){
+            plr_wep->reconstruct(plr_wep);
+            if (Wtexture) SDL_DestroyTexture(Wtexture);
+
+            Wtexture = SDL_CreateTexture(
+                renderer,
+                SDL_PIXELFORMAT_RGBA8888,
+                SDL_TEXTUREACCESS_TARGET,
+                1000, 800
+            );
+        }
     }
 
     const Uint8* keys=SDL_GetKeyboardState(NULL);
