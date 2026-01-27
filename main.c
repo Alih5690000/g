@@ -310,6 +310,11 @@ void loop(void* args){
     SDL_RenderPresent(renderer);
 }
 
+struct {
+  Vector* walls;
+  Vector* sprites;
+} Game2;
+
 int main(){
     emscripten_log(EM_LOG_CONSOLE,"Lets go");
     walls=CreateVector(sizeof(SDL_FRect));
