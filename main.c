@@ -8,7 +8,7 @@ SDL_Window* window;
 float dt;
 int start,end;
 
-void quit(){
+void quit(void){
     emscripten_cancel_main_loop();
 }
 
@@ -119,7 +119,7 @@ Weapon* plr_wep;
 Vector* walls;
 Vector* sprites;
 
-void loop(){
+void loop(void){
 
     HandleDelta();
 
