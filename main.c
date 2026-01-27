@@ -3,6 +3,31 @@
 #include <SDL.h>
 #include "vec.c"
 
+void SDL_MoveF(SDL_FRect* r,
+                float target_x,
+                float target_y,
+                float speed,
+                float dt)
+{
+    float cx = r->x + r->w * 0.5f;
+    float cy = r->y + r->h * 0.5f;
+
+    float dx = target_x - cx;
+    float dy = target_y - cy;
+
+    float dist = sqrtf(dx*dx + dy*dy);
+    if (dist < 0.001f) return;
+
+    float step = speed * dt;
+    if (step > dist) step = dist;
+
+    dx /= dist;
+    dy /= dist;
+
+    r->x += dx * step;
+    r->y += dy * step;
+}
+
 SDL_Texture* Wtexture;
 SDL_Renderer* renderer;
 SDL_Window* window;
@@ -19,13 +44,46 @@ typedef struct Sprite{
     int alive;
     void (*update)(void*);
     void (*destroy)(void*);
-    void(*reconstruct)(void*);
+    void (*reconstruct)(void*);
 } Sprite;
 
 //alive=0
 typedef struct Enemy{
     Sprite base;
+    SDL_FRect* target;
+    float speed;
 } Enemy;
+
+void Enemy_update(void* obj){
+    Enemy* o=(Enemy*)obj;
+    SDL_MoveF(o->base.rect,o->target->x,o->target->y,o->speed,dt);
+    SDL_RenderCopy(renderer,o->base.txt,NULL,o->base.rect);
+}
+
+void Enemy_destroy(void* obj){
+    Enemy* o=(Enemy*)obj;
+    free(o->base.rect);
+    SDL_DestroyTexture(o->base.txt);
+}
+
+//rect is malloced else UB
+void Enemy_create(SDL_FRect* target,SDL_FRect* rect){
+    Enemy* o=malloc(sizeof(Enemy));
+    o->base.rect=rect;
+    o->speed=300.f;
+    o->base.txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_STREAMING,75,10);
+    void* pixels;
+    int pitch;
+    SDL_LockTexture(o->base.txt,NULL,&pixels,&pitch);
+    for (int i=0;i<10;i++){
+        Uint32* row=(Uint32*)((Uint8*)pixels+(pitch*i));
+        for (int j=0;j<75;j++){
+            row[j]=0xFF00FFFF;
+        }
+    }
+    SDL_UnlockTexture(o->base.txt);
+}
 
 typedef struct Weapon{
     Sprite* owner;
