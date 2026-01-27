@@ -1,7 +1,8 @@
-#define SDL_MAIN_HANDLED
 #include <emscripten/html5.h>
 #include <SDL.h>
 #include "vec.c"
+
+
 
 SDL_Texture* Wtexture;
 SDL_Renderer* renderer;
@@ -89,9 +90,13 @@ void Sword_asItem(void* obj,SDL_FPoint* point){
 }
 
 void Sword_reconstruct(void* obj){
+    emscripten_log(EM_LOG_CONSOLE,"Reconstructing sword");
     Sword* o=(Sword*)obj;
+    if (o->txt) return;
+    emscripten_log(EM_LOG_CONSOLE,"Texture is NULL");
     o->txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_STREAMING,75,10);
+    emscripten_log(EM_LOG_CONSOLE,"Recreated");
     void* pixels;
     int pitch;
     SDL_LockTexture(o->txt,NULL,&pixels,&pitch);
@@ -101,7 +106,9 @@ void Sword_reconstruct(void* obj){
             row[j]=0x00FF00FF;
         }
     }
+    emscripten_log(EM_LOG_CONSOLE,"Filled up");
     SDL_UnlockTexture(o->txt);
+    emscripten_log(EM_LOG_CONSOLE,"Unlock");
 }
 
 void* Sword_create(Sprite* owner){
@@ -122,6 +129,7 @@ void* Sword_create(Sprite* owner){
     SDL_UnlockTexture(res->txt);
     res->cd=0.f;
     res->base.owner=owner;
+    res->base.reconstruct=Sword_reconstruct;
     res->base.asItem=Sword_asItem;
     res->base.destroy=Sword_destroy;
     res->base.onFire=Sword_onFire;
@@ -150,24 +158,52 @@ Weapon* plr_wep;
 Vector* walls;
 Vector* sprites;
 
-void loop(void* args){
+EM_BOOL restore(int t, const void* o, void* a) {
+    emscripten_log(EM_LOG_CONSOLE,"Context restored");
+
+    if (!renderer){
+        emscripten_log(EM_LOG_CONSOLE,"renderer expired");
+        renderer = SDL_CreateRenderer(
+            window,
+            -1,
+            SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE
+        );
+    }
+    emscripten_log(EM_LOG_CONSOLE,"Render check");
+
+    if (!Wtexture){
+        Wtexture = SDL_CreateTexture(
+            renderer,
+            SDL_PIXELFORMAT_RGBA8888,
+            SDL_TEXTUREACCESS_TARGET,
+            1000,800
+        );
+    }
+    emscripten_log(EM_LOG_CONSOLE,"Texture check");
+
+    plr_wep->reconstruct((void*)plr_wep);
+    emscripten_log(EM_LOG_CONSOLE,"Reconstructing");
+
+    return EM_TRUE;
+}
+
+void loop(void){
 
     HandleDelta();
 
     SDL_Event e;
     while (SDL_PollEvent(&e)){
-        if (e.type==SDL_QUIT)
+        if (e.type==SDL_QUIT){
             quit();
-        if (e.type == SDL_RENDER_DEVICE_RESET){
-            plr_wep->reconstruct(plr_wep);
-            if (Wtexture) SDL_DestroyTexture(Wtexture);
-
-            Wtexture = SDL_CreateTexture(
-                renderer,
-                SDL_PIXELFORMAT_RGBA8888,
-                SDL_TEXTUREACCESS_TARGET,
-                1000, 800
-            );
+        }
+        if (e.type==SDL_KEYDOWN){
+            if (e.key.keysym.sym==SDLK_r){
+                emscripten_log(EM_LOG_CONSOLE,"response rect at %.2f %.2f",plr.x,plr.y);
+            }
+        }
+        if (e.type==SDL_KEYDOWN){
+            if (e.key.keysym.sym==SDLK_u)
+                restore(0,NULL,NULL);
         }
     }
 
@@ -271,6 +307,10 @@ int main(){
 
     plr_wep=Sword_create(&plr_sprite);
 
-    emscripten_set_main_loop_arg(loop,NULL,-1,0);
+    emscripten_set_webglcontextrestored_callback(
+        "#canvas", NULL, EM_TRUE, restore
+    );
+
+    emscripten_set_main_loop(loop,-1,0);
     return 0;
 }
