@@ -215,7 +215,7 @@ void loop(){
 
 int main(){
     walls=CreateVector(sizeof(SDL_FRect));
-    sprites=CreateVector(sizeof(Sprite));
+    sprites=CreateVector(sizeof(Sprite*));
     {
         Vector_PushBack(walls,&(SDL_FRect){0.f,700.f,1000.f,100.f});
         Vector_PushBack(walls,&(SDL_FRect){400.f,600.f,100.f,25.f});
