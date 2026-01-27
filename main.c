@@ -16,11 +16,13 @@ void quit(void){
 typedef struct Sprite{
     SDL_FRect* rect;
     SDL_Texture* txt;
+    int alive;
     void (*update)(void*);
     void (*destroy)(void*);
     void(*reconstruct)(void*);
 } Sprite;
 
+//alive=0
 typedef struct Enemy{
     Sprite base;
 } Enemy;
@@ -56,7 +58,7 @@ void Sword_onFire(void* obj,Vector* ens){
     SDL_FRect dmgRect={ownerRect.x-25,ownerRect.y,ownerRect.w+50,ownerRect.h};
     int j=0;
     VECTOR_FOR(ens,i,Sprite){
-        if (SDL_HasIntersectionF(&dmgRect,i->rect)) {
+        if (SDL_HasIntersectionF(&dmgRect,i->rect) && i->alive) {
             i->destroy(i);
             Vector_erase(ens,j);
         }
