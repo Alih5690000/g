@@ -1,0 +1,1 @@
+cd emsdk && source emsdk_env.sh && cd ..

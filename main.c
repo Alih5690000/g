@@ -1,3 +1,4 @@
+#define SDL_MAIN_HANDLED
 #include <emscripten/html5.h>
 #include <SDL.h>
 #include "vec.c"
@@ -13,7 +14,7 @@ void quit(void){
 }
 
 typedef struct Sprite{
-    SDL_FRect rect;
+    SDL_FRect* rect;
     SDL_Texture* txt;
     void (*update)(void*);
     void (*destroy)(void*);
@@ -48,11 +49,12 @@ void Sword_destroy(void* obj){
 //ens vector of Sprites
 void Sword_onFire(void* obj,Vector* ens){
     Sword* o=(Sword*)obj;
-    SDL_FRect ownerRect=o->base.owner->rect;
+    if (o->animOn) return;
+    SDL_FRect ownerRect=*(o->base.owner->rect);
     SDL_FRect dmgRect={ownerRect.x-25,ownerRect.y,ownerRect.w+50,ownerRect.h};
     int j=0;
     VECTOR_FOR(ens,i,Sprite){
-        if (SDL_HasIntersectionF(&dmgRect,&i->rect)) {
+        if (SDL_HasIntersectionF(&dmgRect,i->rect)) {
             i->destroy(i);
             Vector_erase(ens,j);
         }
@@ -64,11 +66,11 @@ void Sword_onFire(void* obj,Vector* ens){
 
 void Sword_update(void* obj){
     Sword* o=(Sword*)obj;
-    SDL_FRect ownerRect=o->base.owner->rect;
-    SDL_FRect drawRect={ownerRect.x+ownerRect.w-75.f,ownerRect.y+(ownerRect.h/2.f),
-        10.f,75.f};
+    SDL_FRect ownerRect=*(o->base.owner->rect);
+    SDL_FRect drawRect={ownerRect.x+(ownerRect.w/2.f)-75.f,ownerRect.y+(ownerRect.h/2.f),
+        75.f,10.f};
     if (o->animOn){
-        o->angle-=180*dt;
+        o->angle-=360*dt;
         if (o->angle<0.f){
             o->angle=0;
             o->animOn=0;
@@ -89,7 +91,17 @@ void* Sword_create(Sprite* owner){
     res->angle=0.f;
     res->animOn=0;
     res->txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
-        SDL_TEXTUREACCESS_STATIC,75,10);
+        SDL_TEXTUREACCESS_STREAMING,75,10);
+    void* pixels;
+    int pitch;
+    SDL_LockTexture(res->txt,NULL,&pixels,&pitch);
+    for (int i=0;i<10;i++){
+        Uint32* row=(Uint32*)((Uint8*)pixels+(pitch*i));
+        for (int j=0;j<75;j++){
+            row[j]=0x00FF00FF;
+        }
+    }
+    SDL_UnlockTexture(res->txt);
     res->cd=0.f;
     res->base.owner=owner;
     res->base.asItem=Sword_asItem;
@@ -107,6 +119,7 @@ void HandleDelta(){
 
 
 SDL_FRect plr={0.f,0.f,50.f,50.f};
+Sprite plr_sprite={.rect=&plr};
 float plr_dy=0.f;
 float plr_dx=0.f;
 int plr_inAir=1;
@@ -119,7 +132,7 @@ Weapon* plr_wep;
 Vector* walls;
 Vector* sprites;
 
-void loop(void){
+void loop(void* args){
 
     HandleDelta();
 
@@ -157,7 +170,6 @@ void loop(void){
     if (mstate & SDL_BUTTON_LMASK){
         plr_wep->onFire((void*)plr_wep,sprites);
     }
-    plr_wep->update((void*)plr_wep);
 
     plr.x+=plr_dx;
 
@@ -202,9 +214,10 @@ void loop(void){
         VECTOR_FOR(walls,i,SDL_FRect){
             SDL_RenderFillRectF(renderer,i);
         }
-        VECTOR_FOR(sprites,i,Sprite){
-            i->update((void*)i);
+        VECTOR_FOR(sprites,i,Sprite*){
+            (*i)->update((void*)(*i));
         }
+        plr_wep->update((void*)plr_wep);
     }
 
     SDL_SetRenderTarget(renderer,NULL);
@@ -214,6 +227,7 @@ void loop(void){
 }
 
 int main(){
+    emscripten_log(EM_LOG_CONSOLE,"Lets go");
     walls=CreateVector(sizeof(SDL_FRect));
     sprites=CreateVector(sizeof(Sprite*));
     {
@@ -225,6 +239,9 @@ int main(){
     renderer=SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
     Wtexture=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_TARGET,1000,800);
-    emscripten_set_main_loop(loop,-1,0);
+
+    plr_wep=Sword_create(&plr_sprite);
+
+    emscripten_set_main_loop_arg(loop,NULL,-1,0);
     return 0;
 }

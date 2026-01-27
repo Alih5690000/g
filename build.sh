@@ -1,5 +1,5 @@
 emcc main.c \
-  -o index.html \
+  -o game.html \
   -s USE_SDL=2 \
   -s USE_SDL_IMAGE=2 \
   -s USE_SDL_TTF=2 \
@@ -8,5 +8,6 @@ emcc main.c \
   -s SDL2_MIXER_FORMATS='["wav","ogg","mp3"]' \
   -s ALLOW_MEMORY_GROWTH=1 \
   -s ASSERTIONS=1 \
+  -s EMULATE_FUNCTION_POINTER_CASTS=1 \
   --preload-file assets \
   -O2 && python -m http.server 8000
