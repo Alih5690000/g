@@ -31,6 +31,12 @@ void SDL_MoveF(SDL_FRect* r,
 SDL_Texture* Wtexture;
 SDL_Renderer* renderer;
 SDL_Window* window;
+void(*lastloop) () ;
+void(*currloop) () ;
+void switch_loop(void(*to) ()) {
+  lastloop=currloop;
+  currloop=to;
+} 
 float dt;
 int start,end;
 float gravity=9.f;
@@ -261,8 +267,6 @@ void HandleDelta(){
 }
 
 
-SDL_FRect plr={0.f,0.f,50.f,50.f};
-Sprite plr_sprite={.rect=&plr};
 float plr_dy=0.f;
 float plr_dx=0.f;
 int plr_inAir=1;
@@ -270,12 +274,14 @@ float plr_speed=300.f;
 float plr_dshSpeed=100.f;
 int plr_canDash=1;
 float plr_weight=1.f;
-Weapon* plr_wep;
 
+SDL_FRect plr={0.f,0.f,50.f,50.f};
+Sprite plr_sprite={.rect=&plr};
+Weapon* plr_wep;
 Vector* walls;
 Vector* sprites;
 
-void loop(void* args){
+void loop(void){
 
     HandleDelta();
 
@@ -383,6 +389,7 @@ void loop(void* args){
 struct {
   Vector* walls;
   Vector* sprites;
+  
 } Game2;
 
 int main(){
@@ -411,6 +418,7 @@ int main(){
         s, s->update, s->destroy);
     }
     emscripten_log(EM_LOG_CONSOLE,"Loop started");
-    emscripten_set_main_loop_arg(loop,NULL,-1,0);
+    currloop=loop;
+    emscripten_set_main_loop(currloop,-1,0);
     return 0;
 }
