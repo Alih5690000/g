@@ -49,6 +49,14 @@ typedef struct Sprite{
     void (*reconstruct)(void*);
 } Sprite;
 
+typedef struct PuddleOfBlood{
+    Sprite base;
+} PuddleOfBlood;
+
+PuddleOfBlood* PuddleOfBlood_create(int x,int y){
+    
+}
+
 typedef struct Enemy{
     Sprite base;
     SDL_FRect* target;
@@ -63,26 +71,28 @@ void Enemy_update(void* obj){
     Enemy* o=(Enemy*)obj;
     if (o->target->x>o->base.rect->x){
         o->base.rect->x+=o->speed*dt;
+        if (fabs(o->base.rect->x-o->target->x)<o->speed*dt){
+            o->base.rect->x=o->target->x;
+        }
         VECTOR_FOR(o->collisions,i,SDL_FRect){
             if (SDL_HasIntersectionF(o->base.rect,i))
                 o->base.rect->x=i->x-o->base.rect->w;
         }
     }
-    else{
+    else if(o->target->x<o->base.rect->x){
         o->base.rect->x-=o->speed*dt;
+        if (fabs(o->base.rect->x-o->target->x)<o->speed*dt){
+            o->base.rect->x=o->target->x;
+        }
         VECTOR_FOR(o->collisions,i,SDL_FRect){
-            if (SDL_HasIntersectionF( o->base.rect,i))
-                o->base.rect->x=i->x+i->w;
+        if (SDL_HasIntersectionF( o->base.rect,i))
+            o->base.rect->x=i->x+i->w;
         }
     }
 
-    if (fabs(o->base.rect->x-o->target->x)<o->speed*dt)
-        o->base.rect->x=o->target->x;
-
     o->inAir=1;
-
     o->dy-=gravity*dt*o->weight;
-
+    o->dy=SDL_min(o->dy,0);
     o->base.rect->y-=o->dy;
 
     VECTOR_FOR(o->collisions,i,SDL_FRect){
@@ -97,6 +107,7 @@ void Enemy_update(void* obj){
             o->dy=0;
         }
     }
+
     SDL_RenderCopyF(renderer,o->base.txt,NULL,o->base.rect);
 }
 
@@ -185,7 +196,7 @@ void Sword_update(void* obj){
     SDL_FRect drawRect={ownerRect.x+(ownerRect.w/2.f)-75.f,ownerRect.y+(ownerRect.h/2.f),
         75.f,10.f};
     if (o->animOn){
-        o->angle-=360*dt;
+        o->angle-=720*dt;
         if (o->angle<0.f){
             o->angle=0;
             o->animOn=0;
