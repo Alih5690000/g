@@ -30,7 +30,7 @@ SOFTWARE.
 
 #define VECTOR_FOR(obj,name,type) \
     for(type* name=(type*)__Vector_begin(obj);\
-        name<(type*)__Vector_end(obj);\
+        name<(type*)__Vector_begin(obj)+Vector_Size(obj);\
             name+=1)
 
 #define BINARY 1<<1

@@ -33,6 +33,7 @@ SDL_Renderer* renderer;
 SDL_Window* window;
 float dt;
 int start,end;
+float gravity=9.f;
 
 void quit(void){
     emscripten_cancel_main_loop();
@@ -42,35 +43,84 @@ typedef struct Sprite{
     SDL_FRect* rect;
     SDL_Texture* txt;
     int alive;
+    int active;
     void (*update)(void*);
     void (*destroy)(void*);
     void (*reconstruct)(void*);
 } Sprite;
 
-//alive=0
 typedef struct Enemy{
     Sprite base;
     SDL_FRect* target;
+    int inAir;
+    float dy;
+    float weight;
+    Vector* collisions;
     float speed;
 } Enemy;
 
 void Enemy_update(void* obj){
     Enemy* o=(Enemy*)obj;
-    SDL_MoveF(o->base.rect,o->target->x,o->target->y,o->speed,dt);
-    SDL_RenderCopy(renderer,o->base.txt,NULL,o->base.rect);
+    if (o->target->x>o->base.rect->x){
+        o->base.rect->x+=o->speed*dt;
+        VECTOR_FOR(o->collisions,i,SDL_FRect){
+            if (SDL_HasIntersectionF(o->base.rect,i))
+                o->base.rect->x=i->x-o->base.rect->w;
+        }
+    }
+    else{
+        o->base.rect->x-=o->speed*dt;
+        VECTOR_FOR(o->collisions,i,SDL_FRect){
+            if (SDL_HasIntersectionF( o->base.rect,i))
+                o->base.rect->x=i->x+i->w;
+        }
+    }
+
+    if (fabs(o->base.rect->x-o->target->x)<o->speed*dt)
+        o->base.rect->x=o->target->x;
+
+    o->inAir=1;
+
+    o->dy-=gravity*dt*o->weight;
+
+    o->base.rect->y-=o->dy;
+
+    VECTOR_FOR(o->collisions,i,SDL_FRect){
+        if (SDL_HasIntersectionF(o->base.rect,i)){
+            if (o->base.rect->y<=i->y){
+                o->base.rect->y=i->y-o->base.rect->h;
+                o->inAir=0;
+            }
+            else{
+                o->base.rect->y=i->y+i->h;
+            }
+            o->dy=0;
+        }
+    }
+    SDL_RenderCopyF(renderer,o->base.txt,NULL,o->base.rect);
 }
 
 void Enemy_destroy(void* obj){
     Enemy* o=(Enemy*)obj;
     free(o->base.rect);
     SDL_DestroyTexture(o->base.txt);
+    free(o);
 }
 
-//rect is malloced else UB
-void Enemy_create(SDL_FRect* target,SDL_FRect* rect){
+Enemy* Enemy_create(SDL_FRect* target,SDL_FRect rect,Vector* collisions){
     Enemy* o=malloc(sizeof(Enemy));
-    o->base.rect=rect;
+    SDL_FRect* nrect=malloc(sizeof(SDL_FRect));
+    *nrect=rect;
+    o->base.rect=nrect;
     o->speed=300.f;
+    o->inAir=0;
+    o->base.alive=1;
+    o->base.active=1;
+    o->collisions=collisions;
+    o->target=target;
+    o->weight=1.f;
+    o->base.update=Enemy_update;
+    o->base.destroy=Enemy_destroy;
     o->base.txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_STREAMING,75,10);
     void* pixels;
@@ -83,6 +133,7 @@ void Enemy_create(SDL_FRect* target,SDL_FRect* rect){
         }
     }
     SDL_UnlockTexture(o->base.txt);
+    return o;
 }
 
 typedef struct Weapon{
@@ -108,17 +159,19 @@ void Sword_destroy(void* obj){
     free(o);
 }
 
-//ens vector of Sprites
+//ens vector of Sprite*
 void Sword_onFire(void* obj,Vector* ens){
     Sword* o=(Sword*)obj;
     if (o->animOn) return;
     SDL_FRect ownerRect=*(o->base.owner->rect);
     SDL_FRect dmgRect={ownerRect.x-25,ownerRect.y,ownerRect.w+50,ownerRect.h};
     int j=0;
-    VECTOR_FOR(ens,i,Sprite){
-        if (SDL_HasIntersectionF(&dmgRect,i->rect) && i->alive) {
-            i->destroy(i);
+    VECTOR_FOR(ens,i,Sprite*){
+        if (SDL_HasIntersectionF(&dmgRect,(*i)->rect) && (*i)->alive) {
+            (**i).active=0;
+            (*i)->alive=0;
             Vector_erase(ens,j);
+            i--;
         }
         j++;
     }
@@ -203,9 +256,9 @@ float plr_dy=0.f;
 float plr_dx=0.f;
 int plr_inAir=1;
 float plr_speed=300.f;
-float gravity=9.f;
 float plr_dshSpeed=100.f;
 int plr_canDash=1;
+float plr_weight=1.f;
 Weapon* plr_wep;
 
 Vector* walls;
@@ -267,9 +320,7 @@ void loop(void* args){
 
     plr_inAir=1;
 
-    if (plr_inAir){
-        plr_dy-=gravity*dt;
-    }
+    plr_dy-=gravity*dt*plr_weight;
     
     plr.y-=plr_dy;
 
@@ -294,12 +345,20 @@ void loop(void* args){
         SDL_RenderClear(renderer);
         SDL_SetRenderDrawColor(renderer,0,0,255,255);
         SDL_RenderFillRectF(renderer,&plr);
-        SDL_SetRenderDrawColor(renderer,255,0,0,255);
+        SDL_SetRenderDrawColor(renderer,100,100,100,255);
         VECTOR_FOR(walls,i,SDL_FRect){
             SDL_RenderFillRectF(renderer,i);
         }
+        int j=0;
         VECTOR_FOR(sprites,i,Sprite*){
-            (*i)->update((void*)(*i));
+            if (!(*i)->active) Vector_erase(sprites,j);
+            j++;
+        }
+        VECTOR_FOR(sprites,i,Sprite*){
+            Sprite* s = *i;
+            if (s != NULL && s->update != NULL) {
+                s->update((void*)s);
+            }
         }
         plr_wep->update((void*)plr_wep);
     }
@@ -317,12 +376,6 @@ struct {
 
 int main(){
     emscripten_log(EM_LOG_CONSOLE,"Lets go");
-    walls=CreateVector(sizeof(SDL_FRect));
-    sprites=CreateVector(sizeof(Sprite*));
-    {
-        Vector_PushBack(walls,&(SDL_FRect){0.f,700.f,1000.f,100.f});
-        Vector_PushBack(walls,&(SDL_FRect){400.f,600.f,100.f,25.f});
-    }
     SDL_Init(SDL_INIT_EVERYTHING);
     window=SDL_CreateWindow("Game",0,0,1000,800,SDL_WINDOW_SHOWN);
     renderer=SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
@@ -330,7 +383,23 @@ int main(){
         SDL_TEXTUREACCESS_TARGET,1000,800);
 
     plr_wep=Sword_create(&plr_sprite);
-
+    walls=CreateVector(sizeof(SDL_FRect));
+    sprites=CreateVector(sizeof(Sprite*));
+    {
+        Vector_PushBack(walls,&(SDL_FRect){0.f,700.f,1000.f,100.f});
+        Vector_PushBack(walls,&(SDL_FRect){400.f,600.f,100.f,25.f});
+    }
+    {
+        Sprite* tmp=(Sprite*)Enemy_create(&plr,(SDL_FRect){100,300,100,100},walls);
+        Vector_PushBack(sprites,&tmp);
+    }
+    VECTOR_FOR(sprites,i,Sprite*){
+        Sprite* s=*i;
+        emscripten_log(EM_LOG_CONSOLE,
+        "sprite=%p update=%p destroy=%p",
+        s, s->update, s->destroy);
+    }
+    emscripten_log(EM_LOG_CONSOLE,"Loop started");
     emscripten_set_main_loop_arg(loop,NULL,-1,0);
     return 0;
 }
