@@ -105,6 +105,7 @@ typedef struct Enemy{
     int* hp;
     int damage;
     float dy;
+    float cd;
     float weight;
     float speed;
 } Enemy;
@@ -159,7 +160,10 @@ void Enemy_update(void* obj){
         }
     }
 
-    if (SDL_HasIntersection(o->target,o->base.rect) *o->hp-=o->damage;
+    if (SDL_HasIntersection(o->target,o->base.rect) && o->cd<=0.f) *o->hp-=o->damage;
+
+    o->cd-=dt;
+    o->cd=SDL_max(o->cd,0);
   
     SDL_RenderCopyF(renderer,o->base.txt,NULL,o->base.rect);
 }
@@ -183,6 +187,7 @@ Enemy* Enemy_create(SDL_FRect* target,SDL_FRect rect,Vector* collisions,Vector* 
     o->base.collisions=collisions;
     o->base.sprites=sprites;
     o->target=target;
+    o->cd=1.f;
     o->weight=1.f;
     o->damage=10;
     o->hp=hp;
@@ -331,6 +336,7 @@ Sprite plr_sprite={.rect=&plr};
 Weapon* plr_wep;
 Vector* walls;
 Vector* sprites;
+float RedScreenAlpha=0.f;
 
 void GameOver(void){
     quit();
@@ -340,6 +346,9 @@ void loop(void){
 
     HandleDelta();
 
+    RedScreenAlpha-=dt*255;
+    RedScreenAlpha=SDL_max(RedScreenAlpha,0);
+  
     SDL_Event e;
     while (SDL_PollEvent(&e)){
         if (e.type==SDL_QUIT)
@@ -437,6 +446,8 @@ void loop(void){
         }
         plr_wep->update((void*)plr_wep);
         if (plr_hp<=0) GameOver();
+        SDL_SetRenderDrawColor(renderer,255,0,0,255);
+        SDL_RenderFillRect(renderer,NULL);
     }
 
     SDL_SetRenderTarget(renderer,NULL);
@@ -476,6 +487,7 @@ int main(){
     SDL_Init(SDL_INIT_EVERYTHING);
     window=SDL_CreateWindow("Game",0,0,1000,800,SDL_WINDOW_SHOWN);
     renderer=SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     Wtexture=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_TARGET,1000,800);
 
