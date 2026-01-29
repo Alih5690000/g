@@ -63,7 +63,7 @@ typedef struct PuddleOfBlood{
 
 void PuddleOfBlood_update(void* obj){
     PuddleOfBlood* o=(PuddleOfBlood*)obj;
-    SDL_RenderCopy(renderer,o->base.txt,NULL,o->base.rect);
+    SDL_RenderCopyF(renderer,o->base.txt,NULL,o->base.rect);
 }
 
 void PuddleOfBlood_destroy(void* obj){
@@ -88,12 +88,14 @@ PuddleOfBlood* PuddleOfBlood_create(SDL_FRect rect){
     for (int i=0;i<10;i++){
         Uint32* row=(Uint32*)((Uint8*)pixels+(pitch*i));
         for (int j=0;j<75;j++){
-            row[j]=0xFF00FFFF;
+            row[j]=0xFF0000FF;
         }
     }
     SDL_UnlockTexture(o->base.txt);
+    o->base.active=1;
     o->base.update=PuddleOfBlood_update;
     o->base.destroy=PuddleOfBlood_destroy;
+    return o;
 }
 
 typedef struct Enemy{
@@ -108,8 +110,13 @@ typedef struct Enemy{
 void Enemy_update(void* obj){
     Enemy* o=(Enemy*)obj;
     if (o->base.hp<=0){
+        emscripten_log(EM_LOG_CONSOLE,"died");
         o->base.active=0;
-        Vector_PushBack(o->base.sprites,NULL);
+        {
+            PuddleOfBlood* a=PuddleOfBlood_create((SDL_FRect){o->base.rect->x,
+                o->base.rect->y+o->base.rect->h-10,o->base.rect->w,10});
+            Vector_PushBack(o->base.sprites,&a);
+        }
     }
     if (o->target->x>o->base.rect->x){
         o->base.rect->x+=o->speed*dt;
@@ -224,8 +231,7 @@ void Sword_onFire(void* obj,Vector* ens){
     VECTOR_FOR(ens,i,Sprite*){
         if (SDL_HasIntersectionF(&dmgRect,(*i)->rect) && (*i)->hp>0) {
             (**i).hp-=o->damage;
-            Vector_erase(ens,j);
-            i--;
+            emscripten_log(EM_LOG_CONSOLE,"now hp %d",(**i).hp);
         }
         j++;
     }
@@ -427,6 +433,26 @@ void loop(void){
     SDL_RenderPresent(renderer);
 }
 
+void init1(){
+    plr_wep=Sword_create(&plr_sprite);
+    walls=CreateVector(sizeof(SDL_FRect));
+    sprites=CreateVector(sizeof(Sprite*));
+    {
+        Vector_PushBack(walls,&(SDL_FRect){0.f,700.f,1000.f,100.f});
+        Vector_PushBack(walls,&(SDL_FRect){400.f,600.f,100.f,25.f});
+    }
+    {
+        Sprite* tmp=(Sprite*)Enemy_create(&plr,(SDL_FRect){100,300,100,100},walls,sprites);
+        Vector_PushBack(sprites,&tmp);
+    }
+    VECTOR_FOR(sprites,i,Sprite*){
+        Sprite* s=*i;
+        emscripten_log(EM_LOG_CONSOLE,
+        "sprite=%p update=%p destroy=%p",
+        s, s->update, s->destroy);
+    }
+}
+
 struct {
   Vector* walls;
   Vector* sprites;
@@ -441,23 +467,8 @@ int main(){
     Wtexture=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_TARGET,1000,800);
 
-    plr_wep=Sword_create(&plr_sprite);
-    walls=CreateVector(sizeof(SDL_FRect));
-    sprites=CreateVector(sizeof(Sprite*));
-    {
-        Vector_PushBack(walls,&(SDL_FRect){0.f,700.f,1000.f,100.f});
-        Vector_PushBack(walls,&(SDL_FRect){400.f,600.f,100.f,25.f});
-    }
-    {
-        Sprite* tmp=(Sprite*)Enemy_create(&plr,(SDL_FRect){100,300,100,100},walls,NULL);
-        Vector_PushBack(sprites,&tmp);
-    }
-    VECTOR_FOR(sprites,i,Sprite*){
-        Sprite* s=*i;
-        emscripten_log(EM_LOG_CONSOLE,
-        "sprite=%p update=%p destroy=%p",
-        s, s->update, s->destroy);
-    }
+    init1();
+
     emscripten_log(EM_LOG_CONSOLE,"Loop started");
     currloop=loop;
     emscripten_set_main_loop(currloop,-1,0);
