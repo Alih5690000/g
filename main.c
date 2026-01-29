@@ -48,7 +48,9 @@ void quit(void){
 typedef struct Sprite{
     SDL_FRect* rect;
     SDL_Texture* txt;
-    int alive;
+    Vector* collisions;
+    Vector* sprites;
+    int hp;
     int active;
     void (*update)(void*);
     void (*destroy)(void*);
@@ -59,8 +61,39 @@ typedef struct PuddleOfBlood{
     Sprite base;
 } PuddleOfBlood;
 
-PuddleOfBlood* PuddleOfBlood_create(int x,int y){
-    
+void PuddleOfBlood_update(void* obj){
+    PuddleOfBlood* o=(PuddleOfBlood*)obj;
+    SDL_RenderCopy(renderer,o->base.txt,NULL,o->base.rect);
+}
+
+void PuddleOfBlood_destroy(void* obj){
+    PuddleOfBlood* o=(PuddleOfBlood*)obj;
+    free(o->base.rect);
+    SDL_DestroyTexture(o->base.txt);
+    free(o);
+}
+
+PuddleOfBlood* PuddleOfBlood_create(SDL_FRect rect){
+    PuddleOfBlood* o=malloc(sizeof(PuddleOfBlood));
+    {
+        SDL_FRect* copy=malloc(sizeof(SDL_FRect));
+        *copy=rect;
+        o->base.rect=copy;
+    }
+    o->base.txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_STREAMING,o->base.rect->w,o->base.rect->h);
+    void* pixels;
+    int pitch;
+    SDL_LockTexture(o->base.txt,NULL,&pixels,&pitch);
+    for (int i=0;i<10;i++){
+        Uint32* row=(Uint32*)((Uint8*)pixels+(pitch*i));
+        for (int j=0;j<75;j++){
+            row[j]=0xFF00FFFF;
+        }
+    }
+    SDL_UnlockTexture(o->base.txt);
+    o->base.update=PuddleOfBlood_update;
+    o->base.destroy=PuddleOfBlood_destroy;
 }
 
 typedef struct Enemy{
@@ -69,18 +102,21 @@ typedef struct Enemy{
     int inAir;
     float dy;
     float weight;
-    Vector* collisions;
     float speed;
 } Enemy;
 
 void Enemy_update(void* obj){
     Enemy* o=(Enemy*)obj;
+    if (o->base.hp<=0){
+        o->base.active=0;
+        Vector_PushBack(o->base.sprites,NULL);
+    }
     if (o->target->x>o->base.rect->x){
         o->base.rect->x+=o->speed*dt;
         if (fabs(o->base.rect->x-o->target->x)<o->speed*dt){
             o->base.rect->x=o->target->x;
         }
-        VECTOR_FOR(o->collisions,i,SDL_FRect){
+        VECTOR_FOR(o->base.collisions,i,SDL_FRect){
             if (SDL_HasIntersectionF(o->base.rect,i))
                 o->base.rect->x=i->x-o->base.rect->w;
         }
@@ -90,7 +126,7 @@ void Enemy_update(void* obj){
         if (fabs(o->base.rect->x-o->target->x)<o->speed*dt){
             o->base.rect->x=o->target->x;
         }
-        VECTOR_FOR(o->collisions,i,SDL_FRect){
+        VECTOR_FOR(o->base.collisions,i,SDL_FRect){
         if (SDL_HasIntersectionF( o->base.rect,i))
             o->base.rect->x=i->x+i->w;
         }
@@ -101,7 +137,7 @@ void Enemy_update(void* obj){
     o->dy=SDL_min(o->dy,0);
     o->base.rect->y-=o->dy;
 
-    VECTOR_FOR(o->collisions,i,SDL_FRect){
+    VECTOR_FOR(o->base.collisions,i,SDL_FRect){
         if (SDL_HasIntersectionF(o->base.rect,i)){
             if (o->base.rect->y<=i->y){
                 o->base.rect->y=i->y-o->base.rect->h;
@@ -124,16 +160,17 @@ void Enemy_destroy(void* obj){
     free(o);
 }
 
-Enemy* Enemy_create(SDL_FRect* target,SDL_FRect rect,Vector* collisions){
+Enemy* Enemy_create(SDL_FRect* target,SDL_FRect rect,Vector* collisions,Vector* sprites){
     Enemy* o=malloc(sizeof(Enemy));
     SDL_FRect* nrect=malloc(sizeof(SDL_FRect));
     *nrect=rect;
     o->base.rect=nrect;
     o->speed=300.f;
     o->inAir=0;
-    o->base.alive=1;
+    o->base.hp=50;
     o->base.active=1;
-    o->collisions=collisions;
+    o->base.collisions=collisions;
+    o->base.sprites=sprites;
     o->target=target;
     o->weight=1.f;
     o->base.update=Enemy_update;
@@ -165,6 +202,7 @@ typedef struct Weapon{
 typedef struct Sword{
     Weapon base;
     float angle;
+    int damage;
     int animOn;
     float cd;
     SDL_Texture* txt;
@@ -184,9 +222,8 @@ void Sword_onFire(void* obj,Vector* ens){
     SDL_FRect dmgRect={ownerRect.x-25,ownerRect.y,ownerRect.w+50,ownerRect.h};
     int j=0;
     VECTOR_FOR(ens,i,Sprite*){
-        if (SDL_HasIntersectionF(&dmgRect,(*i)->rect) && (*i)->alive) {
-            (**i).active=0;
-            (*i)->alive=0;
+        if (SDL_HasIntersectionF(&dmgRect,(*i)->rect) && (*i)->hp>0) {
+            (**i).hp-=o->damage;
             Vector_erase(ens,j);
             i--;
         }
@@ -238,6 +275,7 @@ void* Sword_create(Sprite* owner){
     Sword* res=malloc(sizeof(Sword));
     res->angle=0.f;
     res->animOn=0;
+    res->damage=10;
     res->txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_STREAMING,75,10);
     void* pixels;
@@ -368,7 +406,10 @@ void loop(void){
         }
         int j=0;
         VECTOR_FOR(sprites,i,Sprite*){
-            if (!(*i)->active) Vector_erase(sprites,j);
+            if (!(*i)->active){ 
+                (*i)->destroy(*i);
+                Vector_erase(sprites,j);
+            };
             j++;
         }
         VECTOR_FOR(sprites,i,Sprite*){
@@ -408,7 +449,7 @@ int main(){
         Vector_PushBack(walls,&(SDL_FRect){400.f,600.f,100.f,25.f});
     }
     {
-        Sprite* tmp=(Sprite*)Enemy_create(&plr,(SDL_FRect){100,300,100,100},walls);
+        Sprite* tmp=(Sprite*)Enemy_create(&plr,(SDL_FRect){100,300,100,100},walls,NULL);
         Vector_PushBack(sprites,&tmp);
     }
     VECTOR_FOR(sprites,i,Sprite*){
