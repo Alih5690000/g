@@ -102,6 +102,8 @@ typedef struct Enemy{
     Sprite base;
     SDL_FRect* target;
     int inAir;
+    int* hp;
+    int damage;
     float dy;
     float weight;
     float speed;
@@ -157,6 +159,8 @@ void Enemy_update(void* obj){
         }
     }
 
+    if (SDL_HasIntersection(o->target,o->base.rect) *o->hp-=o->damage;
+  
     SDL_RenderCopyF(renderer,o->base.txt,NULL,o->base.rect);
 }
 
@@ -167,7 +171,7 @@ void Enemy_destroy(void* obj){
     free(o);
 }
 
-Enemy* Enemy_create(SDL_FRect* target,SDL_FRect rect,Vector* collisions,Vector* sprites){
+Enemy* Enemy_create(SDL_FRect* target,SDL_FRect rect,Vector* collisions,Vector* sprites,int* hp){
     Enemy* o=malloc(sizeof(Enemy));
     SDL_FRect* nrect=malloc(sizeof(SDL_FRect));
     *nrect=rect;
@@ -180,6 +184,8 @@ Enemy* Enemy_create(SDL_FRect* target,SDL_FRect rect,Vector* collisions,Vector* 
     o->base.sprites=sprites;
     o->target=target;
     o->weight=1.f;
+    o->damage=10;
+    o->hp=hp;
     o->base.update=Enemy_update;
     o->base.destroy=Enemy_destroy;
     o->base.txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
@@ -318,6 +324,7 @@ float plr_speed=300.f;
 float plr_dshSpeed=100.f;
 int plr_canDash=1;
 float plr_weight=1.f;
+int plr_hp=100;
 
 SDL_FRect plr={0.f,0.f,50.f,50.f};
 Sprite plr_sprite={.rect=&plr};
@@ -425,6 +432,7 @@ void loop(void){
             }
         }
         plr_wep->update((void*)plr_wep);
+        if (plr_hp<=0) quit();
     }
 
     SDL_SetRenderTarget(renderer,NULL);
@@ -442,7 +450,7 @@ void init1(){
         Vector_PushBack(walls,&(SDL_FRect){400.f,600.f,100.f,25.f});
     }
     {
-        Sprite* tmp=(Sprite*)Enemy_create(&plr,(SDL_FRect){100,300,100,100},walls,sprites);
+        Sprite* tmp=(Sprite*)Enemy_create(&plr,(SDL_FRect){100,300,100,100},walls,sprites,&plr_hp);
         Vector_PushBack(sprites,&tmp);
     }
     VECTOR_FOR(sprites,i,Sprite*){
