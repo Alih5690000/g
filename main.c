@@ -435,6 +435,8 @@ void loop(void){
             if (!(*i)->active){ 
                 (*i)->destroy(*i);
                 Vector_erase(sprites,j);
+                j--;
+                i--;
             };
             j++;
         }
@@ -446,7 +448,7 @@ void loop(void){
         }
         plr_wep->update((void*)plr_wep);
         if (plr_hp<=0) GameOver();
-        SDL_SetRenderDrawColor(renderer,255,0,0,255);
+        SDL_SetRenderDrawColor(renderer,255,0,0,RedScreenAlpha);
         SDL_RenderFillRect(renderer,NULL);
     }
 
