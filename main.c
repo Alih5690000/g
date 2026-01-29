@@ -332,6 +332,10 @@ Weapon* plr_wep;
 Vector* walls;
 Vector* sprites;
 
+void GameOver(void){
+    quit();
+}
+
 void loop(void){
 
     HandleDelta();
@@ -432,7 +436,7 @@ void loop(void){
             }
         }
         plr_wep->update((void*)plr_wep);
-        if (plr_hp<=0) quit();
+        if (plr_hp<=0) GameOver();
     }
 
     SDL_SetRenderTarget(renderer,NULL);
