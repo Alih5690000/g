@@ -104,6 +104,7 @@ typedef struct Enemy{
     int inAir;
     int* hp;
     int damage;
+    float paramCd;
     float dy;
     float cd;
     float weight;
@@ -160,8 +161,10 @@ void Enemy_update(void* obj){
         }
     }
 
-    if (SDL_HasIntersection(o->target,o->base.rect) && o->cd<=0.f) *o->hp-=o->damage;
-
+    if (SDL_HasIntersectionF(o->target,o->base.rect) && o->cd<=0.f) {
+        *o->hp-=o->damage;
+        o->cd=o->paramCd;
+    }
     o->cd-=dt;
     o->cd=SDL_max(o->cd,0);
   
@@ -180,15 +183,16 @@ Enemy* Enemy_create(SDL_FRect* target,SDL_FRect rect,Vector* collisions,Vector* 
     SDL_FRect* nrect=malloc(sizeof(SDL_FRect));
     *nrect=rect;
     o->base.rect=nrect;
-    o->speed=300.f;
+    o->speed=150.f;
     o->inAir=0;
     o->base.hp=50;
     o->base.active=1;
     o->base.collisions=collisions;
     o->base.sprites=sprites;
     o->target=target;
-    o->cd=1.f;
+    o->cd=0.f;
     o->weight=1.f;
+    o->paramCd=1.f;
     o->damage=10;
     o->hp=hp;
     o->base.update=Enemy_update;
@@ -237,7 +241,7 @@ void Sword_onFire(void* obj,Vector* ens){
     Sword* o=(Sword*)obj;
     if (o->animOn) return;
     SDL_FRect ownerRect=*(o->base.owner->rect);
-    SDL_FRect dmgRect={ownerRect.x-25,ownerRect.y,ownerRect.w+50,ownerRect.h};
+    SDL_FRect dmgRect={ownerRect.x-50,ownerRect.y,ownerRect.w+100,ownerRect.h};
     int j=0;
     VECTOR_FOR(ens,i,Sprite*){
         if (SDL_HasIntersectionF(&dmgRect,(*i)->rect) && (*i)->hp>0) {
@@ -337,6 +341,7 @@ Weapon* plr_wep;
 Vector* walls;
 Vector* sprites;
 float RedScreenAlpha=0.f;
+int lastHp;
 
 void GameOver(void){
     quit();
@@ -346,8 +351,11 @@ void loop(void){
 
     HandleDelta();
 
+    if (plr_hp<lastHp) RedScreenAlpha=255;
+    lastHp=plr_hp;
+
     RedScreenAlpha-=dt*255;
-    RedScreenAlpha=SDL_max(RedScreenAlpha,0);
+    RedScreenAlpha=SDL_max(RedScreenAlpha,0.f);
   
     SDL_Event e;
     while (SDL_PollEvent(&e)){
@@ -459,6 +467,7 @@ void loop(void){
 }
 
 void init1(){
+    lastHp=plr_hp;
     plr_wep=Sword_create(&plr_sprite);
     walls=CreateVector(sizeof(SDL_FRect));
     sprites=CreateVector(sizeof(Sprite*));
@@ -467,7 +476,11 @@ void init1(){
         Vector_PushBack(walls,&(SDL_FRect){400.f,600.f,100.f,25.f});
     }
     {
-        Sprite* tmp=(Sprite*)Enemy_create(&plr,(SDL_FRect){100,300,100,100},walls,sprites,&plr_hp);
+        Sprite* tmp=(Sprite*)Enemy_create(&plr,(SDL_FRect){100,300,100,100}
+            ,walls,sprites,&plr_hp);
+        Vector_PushBack(sprites,&tmp);
+        tmp=(Sprite*)Enemy_create(&plr,(SDL_FRect){900,300,100,100}
+            ,walls,sprites,&plr_hp);
         Vector_PushBack(sprites,&tmp);
     }
     VECTOR_FOR(sprites,i,Sprite*){
