@@ -87,7 +87,7 @@ PuddleOfBlood* PuddleOfBlood_create(SDL_FRect rect){
     SDL_LockTexture(o->base.txt,NULL,&pixels,&pitch);
     for (int i=0;i<10;i++){
         Uint32* row=(Uint32*)((Uint8*)pixels+(pitch*i));
-        for (int j=0;j<75;j++){
+        for (int j=0;j<o->base.rect->w;j++){
             row[j]=0xFF0000FF;
         }
     }
