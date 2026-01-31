@@ -136,14 +136,17 @@ Vector* CreateVector(int ellement_size){
     return v;
 }
 
-void Vector_Resize(Vector* v,int newsize){
-    void* n=malloc(v->__ellsize*newsize);
-    memcpy(n,v->__data,v->__pos*v->__ellsize);
+void Vector_Resize(Vector* v, int newsize){
+    void* n = malloc(v->__ellsize * newsize);
+    int count = v->__pos;
+    if (count > newsize) count = newsize;
+    memcpy(n, v->__data, count * v->__ellsize);
     free(v->__data);
-    v->__data=n;
-    v->__size=newsize;
-    
+    v->__data = n;
+    v->__size = newsize;
+    if (v->__pos > newsize) v->__pos = newsize;
 }
+
 
 void Vector_erase(Vector* v,int pos){
     if (pos>=v->__pos || pos<0){
@@ -151,24 +154,39 @@ void Vector_erase(Vector* v,int pos){
         memcpy(__errbuf,mes,strlen(mes)+1);
         return;
     }
-    memcpy((char*)v->__data+(v->__ellsize*pos),
-    (char*)v->__data+(v->__ellsize*(pos+1)),
-    (v->__pos-pos-1)*v->__ellsize);
+   memmove(
+    (char*)v->__data + v->__ellsize * pos,
+    (char*)v->__data + v->__ellsize * (pos + 1),
+    (v->__pos - pos - 1) * v->__ellsize
+    );
     v->__pos--;
 }
 
-void Vector_insert(Vector* v,int pos,const void* data){
-    memcpy((char*)v->__data+(v->__ellsize*(pos+1)),
-        (char*)v->__data+(v->__ellsize*pos),
-        (v->__pos-pos)*v->__ellsize);
-    memcpy((char*)v->__data+(v->__ellsize*pos),data,v->__ellsize);
-    v->__pos+=1;
+void Vector_insert(Vector* v, int pos, const void* data){
+    if (v->__pos >= v->__size){
+        Vector_Resize(v, v->__size * 2);
+    }
+    memmove(
+        (char*)v->__data + v->__ellsize * (pos + 1),
+        (char*)v->__data + v->__ellsize * pos,
+        (v->__pos - pos) * v->__ellsize
+    );
+    memcpy(
+        (char*)v->__data + v->__ellsize * pos,
+        data,
+        v->__ellsize
+    );
+    v->__pos++;
 }
+
 
 void Vector_PushBack(Vector* v,const void* ell){
     char* ptr=(char*)v->__data;
-    if (v->__pos>=v->__size)
+    if (v->__pos>=v->__size){
+        printf("resized");
+        fflush(stdout);
         Vector_Resize(v,v->__size*2);
+    }
     memcpy(ptr+v->__pos*v->__ellsize,ell,v->__ellsize);
     v->__pos+=1;
 }
@@ -203,6 +221,10 @@ void* Vector_Get(Vector* v,int index){
     char* ptr=(char*)v->__data;
     void* a=(void*)(ptr+index*v->__ellsize);
     return a;
+}
+
+void Vector_clear(Vector* o){
+    o->__pos=0;
 }
 
 Vector* Vector_Copy(Vector* v){
