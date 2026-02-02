@@ -3,6 +3,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include "vec.c"
+#include "vid.h"
 
 void SDL_MoveF(SDL_FRect* r,
                 float target_x,
@@ -33,6 +34,7 @@ SDL_Texture* Wtexture;
 SDL_Renderer* renderer;
 SDL_Window* window;
 SDL_Surface* bloodstain;
+Video* plr_anim;
 void(*lastloop) () ;
 void(*currloop) () ;
 void switch_loop(void(*to) ()) {
@@ -643,6 +645,7 @@ int main(){
     Wtexture=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_TARGET,1000,800);
     bloodstain=IMG_Load("assets/bloodstain.png");
+    plr_anim=Video_create("assets/player_anim",renderer,6,&dt);
 
     init1();
 

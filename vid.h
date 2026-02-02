@@ -2,16 +2,23 @@
 #include <stdio.h>
 #include <string.h>
 #include <SDL_image.h>
-#include <vec.c>
+#include "vec.c"
 typedef struct Video{
     Vector* frames;
     size_t pos;
     SDL_Renderer* renderer;
+    float fps;
+    float* dt;
+    float acc;
 } Video;
 
-Video* Video_create(const char* name, SDL_Renderer* r){
+Video* Video_create(const char* name, SDL_Renderer* r,int fps,float* dt){
     Video* v=(Video*)malloc(sizeof(Video));
     v->renderer=r;
+    v->fps=fps;
+    v->acc=0.f;
+    v->frames=CreateVector(sizeof(SDL_Texture*));
+    v->dt=dt;
     int count=1;
     while (true){
             SDL_Surface* surf;
@@ -39,11 +46,15 @@ Video* Video_create(const char* name, SDL_Renderer* r){
 }
 
 SDL_Texture* Video_getFrame(Video* v){
+    v->acc-=*v->dt;
+    while(v->acc>=1.f/(v->fps)){
+        v->acc-=1.f/(v->fps);
+        v->pos+=1;
+    }
     if (v->pos>=Vector_Size(v->frames)){
         v->pos=0;
     }
     SDL_Texture* res=*((SDL_Texture**)Vector_Get(v->frames,v->pos));
-    v->pos++;
     return res;
 }
 
