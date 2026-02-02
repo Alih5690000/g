@@ -9,5 +9,5 @@ emcc main.c \
   -s ALLOW_MEMORY_GROWTH=1 \
   -s ASSERTIONS=1 \
   -s EMULATE_FUNCTION_POINTER_CASTS=1 \
-  --preload-file assets \
+  --preload-file assets@assets \
   -O2 && python -m http.server 8000

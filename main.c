@@ -1,6 +1,7 @@
 #define SDL_MAIN_HANDLED
 #include <emscripten/html5.h>
 #include <SDL.h>
+#include <SDL_image.h>
 #include "vec.c"
 
 void SDL_MoveF(SDL_FRect* r,
@@ -31,6 +32,7 @@ void SDL_MoveF(SDL_FRect* r,
 SDL_Texture* Wtexture;
 SDL_Renderer* renderer;
 SDL_Window* window;
+SDL_Surface* bloodstain;
 void(*lastloop) () ;
 void(*currloop) () ;
 void switch_loop(void(*to) ()) {
@@ -194,6 +196,12 @@ void Enemy_update(void* obj){
         {
             PuddleOfBlood* a=PuddleOfBlood_create((SDL_FRect){o->base.rect->x,
                 o->base.rect->y+o->base.rect->h-10,o->base.rect->w,10});
+            Vector_PushBack(o->base.sprites,&a);
+            a=PuddleOfBlood_create((SDL_FRect){o->base.rect->x,
+                o->base.rect->y+o->base.rect->h-10,o->base.rect->w,10});
+            SDL_DestroyTexture(a->base.txt);
+            a->base.txt=SDL_CreateTextureFromSurface(renderer,bloodstain);
+            *a->base.rect=*o->base.rect;
             Vector_PushBack(o->base.sprites,&a);
             BloodParticle* tmp=BloodParticle_create(5.f,50.f,
                 (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
@@ -528,8 +536,6 @@ void loop(void){
     {
         SDL_SetRenderDrawColor(renderer,0,0,0,255);
         SDL_RenderClear(renderer);
-        SDL_SetRenderDrawColor(renderer,0,0,255,255);
-        SDL_RenderFillRectF(renderer,&plr);
         SDL_SetRenderDrawColor(renderer,100,100,100,255);
         VECTOR_FOR(walls,i,SDL_FRect){
             SDL_RenderFillRectF(renderer,i);
@@ -551,6 +557,9 @@ void loop(void){
             }
         }
         
+        SDL_SetRenderDrawColor(renderer,0,0,255,255);
+        SDL_RenderFillRectF(renderer,&plr);
+
         plr_wep->update((void*)plr_wep);
         if (plr_hp<=0) GameOver();
         SDL_SetRenderDrawColor(renderer,255,0,0,RedScreenAlpha);
@@ -598,11 +607,13 @@ struct {
 int main(){
     emscripten_log(EM_LOG_CONSOLE,"Lets go");
     SDL_Init(SDL_INIT_EVERYTHING);
+    IMG_Init(IMG_INIT_PNG);
     window=SDL_CreateWindow("Game",0,0,1000,800,SDL_WINDOW_SHOWN);
     renderer=SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     Wtexture=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_TARGET,1000,800);
+    bloodstain=IMG_Load("assets/bloodstain.png");
 
     init1();
 
