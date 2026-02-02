@@ -65,7 +65,6 @@ typedef struct BloodParticle{
 
 void BloodParticle_update(void* obj){
     BloodParticle* o=(BloodParticle*)obj;
-    emscripten_log(EM_LOG_CONSOLE,"BloodParticle updated %.2f",o->lifetime);
     o->lifetime-=dt;
     if (o->lifetime<=0.f){ 
         o->base.active=0;
@@ -100,7 +99,7 @@ void BloodParticle_destroy(void* obj){
 BloodParticle* BloodParticle_create(float dy,float dx,SDL_FRect rect,Vector* sprites,Vector* collisions){
     BloodParticle* o=malloc(sizeof(BloodParticle));
     if (!o){
-        emscripten_log(EM_LOG_CONSOLE,"Allocation failed");
+        emscripten_log(EM_LOG_ERROR,"Allocation failed");
         return NULL;
     }
     {
