@@ -18,6 +18,7 @@ Video* Video_create(const char* name, SDL_Renderer* r,int fps,float* dt){
     v->fps=fps;
     v->acc=0.f;
     v->frames=CreateVector(sizeof(SDL_Texture*));
+    Vector_Resize(v->frames,1024);
     v->dt=dt;
     int count=1;
     while (true){
@@ -41,7 +42,9 @@ Video* Video_create(const char* name, SDL_Renderer* r,int fps,float* dt){
             SDL_FreeSurface(surf);
             count++;
         }
+    Vector_Shrink(v->frames);
     v->pos=0;
+    emscripten_log(EM_LOG_CONSOLE,"Loaded %d frames for video %s",count-1,name);   
     return v;
 }
 

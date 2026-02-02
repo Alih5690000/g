@@ -150,6 +150,9 @@ void Vector_Resize(Vector* v, int newsize){
     if (v->__pos > newsize) v->__pos = newsize;
 }
 
+void Vector_Shrink(Vector* v){
+    Vector_Resize(v,v->__pos);
+}
 
 void Vector_erase(Vector* v,int pos){
     if (pos>=v->__pos || pos<0){

@@ -449,6 +449,7 @@ float RedScreenAlpha=0.f;
 int lastHp;
 int mx,my;
 int pressed=0;
+int plr_walking=0;
 
 void GameOver(void){
     quit();
@@ -507,11 +508,15 @@ void loop(void){
 
     plr_dx=0.f;
 
+    plr_walking=0;
+
     if (keys[SDL_SCANCODE_A]){
         plr_dx=plr_speed*dt*-1;
+        plr_walking=1;
     }
     if (keys[SDL_SCANCODE_D]){
         plr_dx=plr_speed*dt;
+        plr_walking=1;
     }
     if (keys[SDL_SCANCODE_E] && plr_canDash){
         plr_canDash=0;
@@ -588,8 +593,16 @@ void loop(void){
             }
         }
         
-        SDL_SetRenderDrawColor(renderer,0,0,255,255);
-        SDL_RenderFillRectF(renderer,&plr);
+        if (plr_walking){
+            SDL_Texture* animFrame=Video_getFrame(plr_anim);
+            emscripten_log(EM_LOG_CONSOLE,"Walking frame no %d",plr_anim->pos);
+            SDL_RenderCopyF(renderer,animFrame,NULL,&plr);
+        }
+        else{
+            SDL_Texture* animFrame=Video_getFrame(plr_anim);
+            emscripten_log(EM_LOG_CONSOLE,"Idle frame %p",animFrame);
+            SDL_RenderCopyF(renderer,animFrame,NULL,&plr);
+        }
 
         plr_wep->update((void*)plr_wep);
         if (plr_hp<=0) GameOver();
@@ -645,7 +658,7 @@ int main(){
     Wtexture=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_TARGET,1000,800);
     bloodstain=IMG_Load("assets/bloodstain.png");
-    plr_anim=Video_create("assets/player_anim",renderer,6,&dt);
+    plr_anim=Video_create("assets/plr_anim",renderer,12,&dt);
 
     init1();
 
