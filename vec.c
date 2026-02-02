@@ -21,6 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+#ifndef VEC_C
+#define VEC_C
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -463,3 +466,4 @@ void ConditionVariable_wait(ConditionVariable* o,Mutex* m){
 void ConditionVariable_notify(ConditionVariable* o){
     pthread_cond_signal(&o->cv);
 }
+#endif

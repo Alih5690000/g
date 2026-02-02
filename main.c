@@ -207,6 +207,22 @@ void Enemy_update(void* obj){
                 (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
                 o->base.sprites,o->base.collisions);
             Vector_PushBack(o->base.sprites,&tmp);
+            tmp=BloodParticle_create(5.f,25.f,
+                (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
+                o->base.sprites,o->base.collisions);
+            Vector_PushBack(o->base.sprites,&tmp);
+            tmp=BloodParticle_create(5.f,10.f,
+                (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
+                o->base.sprites,o->base.collisions);
+            Vector_PushBack(o->base.sprites,&tmp);
+            tmp=BloodParticle_create(5.f,-25.f,
+                (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
+                o->base.sprites,o->base.collisions);
+            Vector_PushBack(o->base.sprites,&tmp);
+            tmp=BloodParticle_create(5.f,-10.f,
+                (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
+                o->base.sprites,o->base.collisions);
+            Vector_PushBack(o->base.sprites,&tmp);
             tmp=BloodParticle_create(5.f,-50.f,
                 (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
                 o->base.sprites,o->base.collisions);
@@ -323,7 +339,6 @@ typedef struct Weapon{
     void(*onFire)(void*,Vector*);
     void(*asItem)(void*,SDL_FPoint*);
     void(*destroy)(void*);
-    void(*reconstruct)(void*);
 } Weapon;
 
 typedef struct Sword{
@@ -381,22 +396,6 @@ void Sword_asItem(void* obj,SDL_FPoint* point){
     SDL_RenderCopyF(renderer,o->txt,NULL,&rect);
 }
 
-void Sword_reconstruct(void* obj){
-    Sword* o=(Sword*)obj;
-    o->txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
-        SDL_TEXTUREACCESS_STREAMING,75,10);
-    void* pixels;
-    int pitch;
-    SDL_LockTexture(o->txt,NULL,&pixels,&pitch);
-    for (int i=0;i<10;i++){
-        Uint32* row=(Uint32*)((Uint8*)pixels+(pitch*i));
-        for (int j=0;j<75;j++){
-            row[j]=0x00FF00FF;
-        }
-    }
-    SDL_UnlockTexture(o->txt);
-}
-
 void* Sword_create(Sprite* owner){
     Sword* res=malloc(sizeof(Sword));
     res->angle=0.f;
@@ -420,7 +419,6 @@ void* Sword_create(Sprite* owner){
     res->base.destroy=Sword_destroy;
     res->base.onFire=Sword_onFire;
     res->base.update=Sword_update;
-    res->base.reconstruct=Sword_reconstruct;
     return res;
 }
 
@@ -438,6 +436,7 @@ float plr_dshSpeed=100.f;
 int plr_canDash=1;
 float plr_weight=1.f;
 int plr_hp=100;
+int fullscreen=0;
 
 SDL_FRect plr={0.f,0.f,50.f,50.f};
 Sprite plr_sprite={.rect=&plr};
@@ -446,6 +445,8 @@ Vector* walls;
 Vector* sprites;
 float RedScreenAlpha=0.f;
 int lastHp;
+int mx,my;
+int pressed=0;
 
 void GameOver(void){
     quit();
@@ -468,6 +469,28 @@ void loop(void){
         if (e.type==SDL_KEYDOWN){
             if (e.key.keysym.sym==SDLK_r)
                 emscripten_log(EM_LOG_CONSOLE,"rect at %.2f %.2f",plr.x,plr.y);
+        }
+        if (e.type==SDL_KEYDOWN){
+            if (e.key.keysym.sym==SDLK_f)
+                if (fullscreen==0){
+                    emscripten_request_fullscreen("#canvas",1);
+                    fullscreen=1;
+                }
+                else{
+                    emscripten_exit_fullscreen();
+                    fullscreen=0;
+                }
+        }
+        if (e.type==SDL_MOUSEBUTTONDOWN){
+            if (e.button.button==SDL_BUTTON_LEFT){
+                int w, h;
+                SDL_GetWindowSize(window, &w, &h);
+
+                mx = (float)e.button.x / w * 1000.f;
+                my = (float)e.button.y / h * 800.f;
+
+                pressed = 1;
+            }
         }
     }
 
@@ -536,6 +559,12 @@ void loop(void){
     {
         SDL_SetRenderDrawColor(renderer,0,0,0,255);
         SDL_RenderClear(renderer);
+        SDL_SetRenderDrawColor(renderer,255,255,255,255);
+        if (pressed){
+            SDL_FRect target={mx,my,10.f,10.f};
+            SDL_RenderFillRectF(renderer,&target);
+            pressed=0;
+        }
         SDL_SetRenderDrawColor(renderer,100,100,100,255);
         VECTOR_FOR(walls,i,SDL_FRect){
             SDL_RenderFillRectF(renderer,i);
