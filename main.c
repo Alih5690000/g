@@ -38,6 +38,7 @@ SDL_Window* window;
 SDL_Surface* bloodstain;
 Video* plr_anim;
 Video* plr_animWithSwordIdle;
+Video* plr_animWithSwordCalm;
 Video* plr_animWithSwordAttack;
 void(*lastloop) () ;
 void(*currloop) () ;
@@ -395,6 +396,7 @@ void Sword_update(void* obj){
     }
     if (o->animOn){
             Video_setPos(plr_animWithSwordIdle,0);
+            Video_setPos(plr_animWithSwordCalm,0);
             Video_update(plr_animWithSwordAttack);
             SDL_RenderCopyF(renderer,
                 Video_getFrame(plr_animWithSwordAttack),
@@ -402,6 +404,7 @@ void Sword_update(void* obj){
     }
     else if (*o->moving){
         Video_setPos(plr_animWithSwordAttack,0);
+        Video_setPos(plr_animWithSwordCalm,0);
         Video_update(plr_animWithSwordIdle);
         SDL_RenderCopyF(renderer,
             Video_getFrame(plr_animWithSwordIdle),
@@ -410,8 +413,9 @@ void Sword_update(void* obj){
     else{
         Video_setPos(plr_animWithSwordIdle,0);
         Video_setPos(plr_animWithSwordAttack,0);
+        Video_update(plr_animWithSwordCalm);
         SDL_RenderCopyF(renderer,
-            *((SDL_Texture**)Vector_Get(plr_animWithSwordIdle->frames,4)),
+            Video_getFrame(plr_animWithSwordCalm),
             NULL,o->base.owner->rect);
     }
 }
