@@ -35,6 +35,8 @@ SDL_Renderer* renderer;
 SDL_Window* window;
 SDL_Surface* bloodstain;
 Video* plr_anim;
+Video* plr_animWithSwordIdle;
+Video* plr_animWithSwordAttack;
 void(*lastloop) () ;
 void(*currloop) () ;
 void switch_loop(void(*to) ()) {
@@ -349,6 +351,7 @@ typedef struct Sword{
     int damage;
     int animOn;
     float cd;
+    int* moving;
     SDL_Texture* txt;
 } Sword;
 
@@ -388,8 +391,27 @@ void Sword_update(void* obj){
             o->animOn=0;
         }
     }
-    SDL_RenderCopyExF(renderer,o->txt,NULL,&drawRect,o->angle,&(SDL_FPoint){drawRect.w,drawRect.h},
-        SDL_FLIP_NONE);
+    if (o->animOn){
+            Video_setPos(plr_animWithSwordIdle,0);
+            Video_update(plr_animWithSwordAttack);
+            SDL_RenderCopyF(renderer,
+                Video_getFrame(plr_animWithSwordAttack),
+                NULL,o->base.owner->rect);
+    }
+    else if (*o->moving){
+        Video_setPos(plr_animWithSwordAttack,0);
+        Video_update(plr_animWithSwordIdle);
+        SDL_RenderCopyF(renderer,
+            Video_getFrame(plr_animWithSwordIdle),
+            NULL,o->base.owner->rect);
+    }
+    else{
+        Video_setPos(plr_animWithSwordIdle,0);
+        Video_setPos(plr_animWithSwordAttack,0);
+        SDL_RenderCopyF(renderer,
+            *((SDL_Texture**)Vector_Get(plr_animWithSwordIdle->frames,4)),
+            NULL,o->base.owner->rect);
+    }
 }
 
 void Sword_asItem(void* obj,SDL_FPoint* point){
@@ -398,8 +420,9 @@ void Sword_asItem(void* obj,SDL_FPoint* point){
     SDL_RenderCopyF(renderer,o->txt,NULL,&rect);
 }
 
-void* Sword_create(Sprite* owner){
+void* Sword_create(Sprite* owner,int* moving){
     Sword* res=malloc(sizeof(Sword));
+    res->moving=moving;
     res->angle=0.f;
     res->animOn=0;
     res->damage=10;
@@ -437,10 +460,11 @@ float plr_speed=300.f;
 float plr_dshSpeed=100.f;
 int plr_canDash=1;
 float plr_weight=1.f;
+float plr_jmpPower=7.5f;
 int plr_hp=100;
 int fullscreen=0;
 
-SDL_FRect plr={0.f,0.f,50.f,50.f};
+SDL_FRect plr={0.f,0.f,75.f,75.f};
 Sprite plr_sprite={.rect=&plr};
 Weapon* plr_wep;
 Vector* walls;
@@ -474,7 +498,7 @@ void loop(void){
                 emscripten_log(EM_LOG_CONSOLE,"rect at %.2f %.2f",plr.x,plr.y);
         }
         if (e.type==SDL_KEYDOWN){
-            if (e.key.keysym.sym==SDLK_f)
+            if (e.key.keysym.sym==SDLK_f){
                 if (fullscreen==0){
                     emscripten_request_fullscreen("#canvas",1);
                     fullscreen=1;
@@ -483,6 +507,7 @@ void loop(void){
                     emscripten_exit_fullscreen();
                     fullscreen=0;
                 }
+            }
         }
         if (e.type==SDL_MOUSEBUTTONDOWN){
             if (e.button.button==SDL_BUTTON_LEFT){
@@ -501,7 +526,7 @@ void loop(void){
 
     if (keys[SDL_SCANCODE_W]){
         if(!plr_inAir){
-            plr_dy=5.f;
+            plr_dy=plr_jmpPower;
             plr_inAir=1;
         }
     }
@@ -593,17 +618,6 @@ void loop(void){
             }
         }
         
-        if (plr_walking){
-            SDL_Texture* animFrame=Video_getFrame(plr_anim);
-            emscripten_log(EM_LOG_CONSOLE,"Walking frame no %d",plr_anim->pos);
-            SDL_RenderCopyF(renderer,animFrame,NULL,&plr);
-        }
-        else{
-            SDL_Texture* animFrame=Video_getFrame(plr_anim);
-            emscripten_log(EM_LOG_CONSOLE,"Idle frame %p",animFrame);
-            SDL_RenderCopyF(renderer,animFrame,NULL,&plr);
-        }
-
         plr_wep->update((void*)plr_wep);
         if (plr_hp<=0) GameOver();
         SDL_SetRenderDrawColor(renderer,255,0,0,RedScreenAlpha);
@@ -618,7 +632,7 @@ void loop(void){
 
 void init1(){
     lastHp=plr_hp;
-    plr_wep=Sword_create(&plr_sprite);
+    plr_wep=Sword_create(&plr_sprite,&plr_walking);
     walls=CreateVector(sizeof(SDL_FRect));
     sprites=CreateVector(sizeof(Sprite*));
     Vector_Resize(sprites,1024);
@@ -659,6 +673,11 @@ int main(){
         SDL_TEXTUREACCESS_TARGET,1000,800);
     bloodstain=IMG_Load("assets/bloodstain.png");
     plr_anim=Video_create("assets/plr_anim",renderer,12,&dt);
+    plr_animWithSwordIdle=Video_create(
+        "assets/plr_animWithSwordIdle",renderer,6,&dt);
+    plr_animWithSwordAttack=Video_create(
+        "assets/plr_animWithSwordAttack",renderer,10,&dt);
+    end=SDL_GetTicks();
 
     init1();
 

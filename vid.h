@@ -49,14 +49,6 @@ Video* Video_create(const char* name, SDL_Renderer* r,int fps,float* dt){
 }
 
 SDL_Texture* Video_getFrame(Video* v){
-    v->acc-=*v->dt;
-    while(v->acc>=1.f/(v->fps)){
-        v->acc-=1.f/(v->fps);
-        v->pos+=1;
-    }
-    if (v->pos>=Vector_Size(v->frames)){
-        v->pos=0;
-    }
     SDL_Texture* res=*((SDL_Texture**)Vector_Get(v->frames,v->pos));
     return res;
 }
@@ -64,6 +56,17 @@ SDL_Texture* Video_getFrame(Video* v){
 void Video_destroy(Video* v){
     Vector_Free(v->frames);
     free(v);
+}
+
+void Video_update(Video* v){
+    v->acc+=*v->dt;
+    while(v->acc>=1.f/(v->fps)){
+        v->acc-=1.f/(v->fps);
+        v->pos+=1;
+    }
+    if (v->pos>=Vector_Size(v->frames)){
+        v->pos=0;
+    }
 }
 
 void Video_setPos(Video* v,size_t pos){
