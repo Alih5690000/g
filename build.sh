@@ -10,4 +10,5 @@ emcc main.c \
   -s ASSERTIONS=1 \
   -s EMULATE_FUNCTION_POINTER_CASTS=1 \
   --preload-file assets@assets \
+  --use-preload-cache \
   -O2 && python -m http.server 8000

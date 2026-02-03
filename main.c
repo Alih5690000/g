@@ -5,6 +5,8 @@
 #include "vec.c"
 #include "vid.h"
 
+//random comment
+
 void SDL_MoveF(SDL_FRect* r,
                 float target_x,
                 float target_y,
