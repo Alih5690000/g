@@ -377,12 +377,14 @@ void Sword_onFire(void* obj,Vector* ens){
     SDL_FRect ownerRect=*(o->base.owner->rect);
     SDL_FRect dmgRect={ownerRect.x-50,ownerRect.y,ownerRect.w+100,ownerRect.h};
     int j=0;
+    int backup_hp=o->base.owner->hp;
     VECTOR_FOR(ens,i,Sprite*){
         if (SDL_HasIntersectionF(&dmgRect,(*i)->rect) && (*i)->hp>0) {
             (**i).hp-=o->damage;
         }
         j++;
     }
+    o->base.owner->hp=backup_hp;
     o->animOn=1;
     o->angle=360.f;
 }
@@ -460,10 +462,10 @@ void* Sword_create(Sprite* owner,int* moving,int* midAir){
     }
     SDL_UnlockTexture(res->txt);
     res->cd=0.f;
-    res->Attack=plr_animWithSwordAttack;
-    res->Idle=plr_animWithSwordIdle;
-    res->Calm=plr_animWithSwordCalm;
-    res->MidAir=plr_animWithSwordMidAir;
+    res->Attack=Video_CopyShallow(plr_animWithSwordAttack);
+    res->Idle=Video_CopyShallow(plr_animWithSwordIdle);
+    res->Calm=Video_CopyShallow(plr_animWithSwordCalm);
+    res->MidAir=Video_CopyShallow(plr_animWithSwordMidAir);
     res->base.owner=owner;
     res->base.asItem=Sword_asItem;
     res->base.destroy=Sword_destroy;

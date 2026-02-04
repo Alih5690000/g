@@ -3,6 +3,39 @@
 #include <string.h>
 #include <SDL_image.h>
 #include "vec.c"
+
+SDL_Texture* DeepCopyTexture(SDL_Renderer* renderer, SDL_Texture* src)
+{
+    int w, h;
+    Uint32 format;
+    int access;
+
+    if (SDL_QueryTexture(src, &format, &access, &w, &h) != 0)
+        return NULL;
+
+    SDL_Texture* dst = SDL_CreateTexture(
+        renderer,
+        format,
+        SDL_TEXTUREACCESS_TARGET,
+        w,
+        h
+    );
+
+    if (!dst)
+        return NULL;
+
+    SDL_Texture* oldTarget = SDL_GetRenderTarget(renderer);
+
+    SDL_SetRenderTarget(renderer, dst);
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, src, NULL, NULL);
+
+    SDL_SetRenderTarget(renderer, oldTarget);
+
+    return dst;
+}
+
+
 typedef struct Video{
     Vector* frames;
     size_t pos;
@@ -68,6 +101,42 @@ void Video_update(Video* v){
         v->pos=0;
     }
 }
+
+Video* Video_CopyShallow(Video* o){
+    Video* res=malloc(sizeof(Video));
+    res->renderer=o->renderer;
+    res->fps=o->fps;
+    res->acc=o->acc;
+    res->dt=o->dt;
+    res->frames=CreateVector(sizeof(SDL_Texture*));
+    Vector_Resize(res->frames,Vector_Size(o->frames));
+    for (int i=0;i<Vector_Size(o->frames);i++){
+        SDL_Texture* t=*(SDL_Texture**)Vector_Get(o->frames,i);
+        Vector_PushBack(res->frames,&t);
+    }
+    return res;
+}
+
+Video* Video_CopyDeep(Video* o){
+    Video* res=malloc(sizeof(Video));
+    res->renderer=o->renderer;
+    res->fps=o->fps;
+    res->acc=o->acc;
+    res->dt=o->dt;
+    res->frames=CreateVector(sizeof(SDL_Texture*));
+    Vector_Resize(res->frames,Vector_Size(o->frames));
+    for (int i=0;i<Vector_Size(o->frames);i++){
+        SDL_Texture* t=DeepCopyTexture(o->renderer,*(SDL_Texture**)Vector_Get(o->frames,i));
+        Vector_PushBack(res->frames,&t);
+    }
+    return res;
+}
+
+size_t Video_getPos(Video* v){
+    return v->pos;
+}
+
+
 
 void Video_setPos(Video* v,size_t pos){
     if (pos>=Vector_Size(v->frames)){
