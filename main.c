@@ -40,13 +40,14 @@ Video* plr_anim;
 Video* plr_animWithSwordIdle;
 Video* plr_animWithSwordCalm;
 Video* plr_animWithSwordAttack;
+Video* plr_animWithSwordMidAir;
 void(*lastloop) () ;
 void(*currloop) () ;
 void switch_loop(void(*to) ()) {
   lastloop=currloop;
   currloop=to;
 } 
-float dt;
+float dt,acc;
 int start,end;
 float gravity=9.f;
 
@@ -355,6 +356,11 @@ typedef struct Sword{
     int animOn;
     float cd;
     int* moving;
+    int* midAir;
+    Video* Attack;
+    Video* Idle;
+    Video* Calm;
+    Video* MidAir;
     SDL_Texture* txt;
 } Sword;
 
@@ -395,27 +401,35 @@ void Sword_update(void* obj){
         }
     }
     if (o->animOn){
-            Video_setPos(plr_animWithSwordIdle,0);
-            Video_setPos(plr_animWithSwordCalm,0);
-            Video_update(plr_animWithSwordAttack);
+            Video_setPos(o->MidAir,0);
+            Video_setPos(o->Calm,0);
+            Video_update(o->Attack);
             SDL_RenderCopyF(renderer,
-                Video_getFrame(plr_animWithSwordAttack),
+                Video_getFrame(o->Attack),
                 NULL,o->base.owner->rect);
     }
-    else if (*o->moving){
-        Video_setPos(plr_animWithSwordAttack,0);
-        Video_setPos(plr_animWithSwordCalm,0);
-        Video_update(plr_animWithSwordIdle);
+    else if (*o->midAir){
+        Video_setPos(o->Attack,0);
+        Video_setPos(o->Calm,0);
+        Video_update(o->MidAir);
         SDL_RenderCopyF(renderer,
-            Video_getFrame(plr_animWithSwordIdle),
+            Video_getFrame(o->MidAir),
+            NULL,o->base.owner->rect);
+    }
+    else if (*o->moving){
+        Video_setPos(o->Attack,0);
+        Video_setPos(o->Calm,0);
+        Video_update(o->Idle);
+        SDL_RenderCopyF(renderer,
+            Video_getFrame(o->Idle),
             NULL,o->base.owner->rect);
     }
     else{
-        Video_setPos(plr_animWithSwordIdle,0);
-        Video_setPos(plr_animWithSwordAttack,0);
-        Video_update(plr_animWithSwordCalm);
+        Video_setPos(o->Attack,0);
+        Video_setPos(o->Idle,0);
+        Video_update(o->Calm);
         SDL_RenderCopyF(renderer,
-            Video_getFrame(plr_animWithSwordCalm),
+            Video_getFrame(o->Calm),
             NULL,o->base.owner->rect);
     }
 }
@@ -426,9 +440,10 @@ void Sword_asItem(void* obj,SDL_FPoint* point){
     SDL_RenderCopyF(renderer,o->txt,NULL,&rect);
 }
 
-void* Sword_create(Sprite* owner,int* moving){
+void* Sword_create(Sprite* owner,int* moving,int* midAir){
     Sword* res=malloc(sizeof(Sword));
     res->moving=moving;
+    res->midAir=midAir;
     res->angle=0.f;
     res->animOn=0;
     res->damage=10;
@@ -445,6 +460,10 @@ void* Sword_create(Sprite* owner,int* moving){
     }
     SDL_UnlockTexture(res->txt);
     res->cd=0.f;
+    res->Attack=plr_animWithSwordAttack;
+    res->Idle=plr_animWithSwordIdle;
+    res->Calm=plr_animWithSwordCalm;
+    res->MidAir=plr_animWithSwordMidAir;
     res->base.owner=owner;
     res->base.asItem=Sword_asItem;
     res->base.destroy=Sword_destroy;
@@ -456,6 +475,8 @@ void* Sword_create(Sprite* owner,int* moving){
 void HandleDelta(){
     start=SDL_GetTicks();
     dt=(start-end)/1000.f;
+    if (dt>0.016f)
+        dt=0.016f;
     end=start;
 }
 
@@ -517,11 +538,10 @@ void loop(void){
         }
         if (e.type==SDL_MOUSEBUTTONDOWN){
             if (e.button.button==SDL_BUTTON_LEFT){
-                int w, h;
-                SDL_GetWindowSize(window, &w, &h);
+                emscripten_log(EM_LOG_CONSOLE,"Mouse at %d %d",e.button.x,e.button.y);
 
-                mx = (float)e.button.x / w * 1000.f;
-                my = (float)e.button.y / h * 800.f;
+                mx = e.button.x-300;
+                my = e.button.y;
 
                 pressed = 1;
             }
@@ -575,7 +595,7 @@ void loop(void){
     plr_inAir=1;
 
     plr_dy-=gravity*dt*plr_weight;
-    
+
     plr.y-=plr_dy;
 
     VECTOR_FOR(walls,i,SDL_FRect){
@@ -598,11 +618,6 @@ void loop(void){
         SDL_SetRenderDrawColor(renderer,0,0,0,255);
         SDL_RenderClear(renderer);
         SDL_SetRenderDrawColor(renderer,255,255,255,255);
-        if (pressed){
-            SDL_FRect target={mx,my,10.f,10.f};
-            SDL_RenderFillRectF(renderer,&target);
-            pressed=0;
-        }
         SDL_SetRenderDrawColor(renderer,100,100,100,255);
         VECTOR_FOR(walls,i,SDL_FRect){
             SDL_RenderFillRectF(renderer,i);
@@ -631,6 +646,11 @@ void loop(void){
     }
 
     SDL_SetRenderTarget(renderer,NULL);
+    if (pressed){
+        SDL_FRect target={mx,my,10.f,10.f};
+        SDL_RenderFillRectF(renderer,&target);
+        pressed=0;
+    }
     SDL_RenderCopy(renderer,Wtexture,NULL,NULL);
 
     SDL_RenderPresent(renderer);
@@ -638,7 +658,7 @@ void loop(void){
 
 void init1(){
     lastHp=plr_hp;
-    plr_wep=Sword_create(&plr_sprite,&plr_walking);
+    plr_wep=Sword_create(&plr_sprite,&plr_walking,&plr_inAir);
     walls=CreateVector(sizeof(SDL_FRect));
     sprites=CreateVector(sizeof(Sprite*));
     Vector_Resize(sprites,1024);
@@ -683,6 +703,11 @@ int main(){
         "assets/plr_animWithSwordIdle",renderer,6,&dt);
     plr_animWithSwordAttack=Video_create(
         "assets/plr_animWithSwordAttack",renderer,10,&dt);
+    plr_animWithSwordCalm=Video_create(
+        "assets/plr_animWithSwordCalm",renderer,6,&dt);
+    plr_animWithSwordMidAir=Video_create(
+        "assets/plr_animWithSwordMidAir",renderer,6,&dt);
+    start=SDL_GetTicks();
     end=SDL_GetTicks();
 
     init1();
