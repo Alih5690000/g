@@ -2,6 +2,7 @@
 #include <emscripten/html5.h>
 #include <SDL.h>
 #include <SDL_image.h>
+#include <math.h>
 #include "vec.c"
 #include "vid.h"
 
@@ -39,7 +40,7 @@ SDL_Surface* bloodstain;
 Video* plr_anim;
 Video* plr_animWithSwordIdle;
 Video* plr_animWithSwordCalm;
-Video* plr_animWithSwordAttack;
+Vector* plr_animWithSwordAttack;
 Video* plr_animWithSwordMidAir;
 void(*lastloop) () ;
 void(*currloop) () ;
@@ -341,6 +342,15 @@ Enemy* Enemy_create(SDL_FRect* target,SDL_FRect rect,Vector* collisions,Vector* 
     return o;
 }
 
+#define DIR_UP 1
+#define DIR_UP_RIGHT 2
+#define DIR_RIGHT 3
+#define DIR_DOWN_RIGHT 4
+#define DIR_DOWN 5
+#define DIR_DOWN_LEFT 6
+#define DIR_LEFT 7
+#define DIR_UP_LEFT 8
+
 typedef struct Weapon{
     Sprite* owner;
     void(*update)(void*);
@@ -357,10 +367,12 @@ typedef struct Sword{
     float cd;
     int* moving;
     int* midAir;
+    Vector* attacks_pos;
     Video* Attack;
     Video* Idle;
     Video* Calm;
     Video* MidAir;
+    int* dir;
     SDL_Texture* txt;
 } Sword;
 
@@ -375,7 +387,33 @@ void Sword_onFire(void* obj,Vector* ens){
     Sword* o=(Sword*)obj;
     if (o->animOn) return;
     SDL_FRect ownerRect=*(o->base.owner->rect);
-    SDL_FRect dmgRect={ownerRect.x-50,ownerRect.y,ownerRect.w+100,ownerRect.h};
+    SDL_FRect dmgRect={ownerRect.x+ownerRect.w/2,ownerRect.y+ownerRect.h/2,ownerRect.w,ownerRect.h};
+    switch (*o->dir){
+        case DIR_UP:
+          dmgRect=(SDL_FRect){ownerRect.x,ownerRect.y+20,ownerRect.w,20};
+          break;
+        case DIR_UP_RIGHT:
+          dmgRect=(SDL_FRect){ownerRect.x+ownerRect.w/2,ownerRect.y+20,ownerRect.w,20};
+          break;
+        case DIR_UP_LEFT:
+          dmgRect=(SDL_FRect){ownerRect.x-ownerRect.w/2,ownerRect.y+20,ownerRect.w,20};
+          break;
+        case DIR_DOWN:
+          dmgRect=(SDL_FRect){ownerRect.x,ownerRect.y-ownerRect.h,ownerRect.w,20};
+          break;
+        case DIR_DOWN_RIGHT:
+          dmgRect=(SDL_FRect){ownerRect.x+ownerRect.w/2,ownerRect.y-ownerRect.h,ownerRect.w,20};
+          break;
+        case DIR_DOWN_LEFT:
+          dmgRect=(SDL_FRect){ownerRect.x-ownerRect.w/2,ownerRect.y-ownerRect.h,ownerRect.w,20};
+          break;
+        case DIR_RIGHT:
+          dmgRect=(SDL_FRect){ownerRect.x+ownerRect.w,ownerRect.y,20,ownerRect.h};
+          break;
+        case DIR_LEFT:
+          dmgRect=(SDL_FRect){ownerRect.x-20,ownerRect.y,20,ownerRect.h};
+          break;
+    }
     int j=0;
     int backup_hp=o->base.owner->hp;
     VECTOR_FOR(ens,i,Sprite*){
@@ -403,12 +441,17 @@ void Sword_update(void* obj){
         }
     }
     if (o->animOn){
-            Video_setPos(o->MidAir,0);
-            Video_setPos(o->Calm,0);
-            Video_update(o->Attack);
-            SDL_RenderCopyF(renderer,
-                Video_getFrame(o->Attack),
-                NULL,o->base.owner->rect);
+        Video_setPos(o->MidAir,0);
+        Video_setPos(o->Calm,0);
+        for (int i=0;i<Vector_Size(o->attacks_pos);i++){
+            if (i!=*o->dir)
+                Video_setPos(*Vector_Get(o->attacks_pos,i),0);
+        }
+        Video_update(*Vector_Get(o->attacks_pos,*o->dir));
+        SDL_RenderCopyF(renderer,
+            Video_getFrame(*Vector_Get(o->attacks_pos,*o->dir)),
+            NULL,o->base.owner->rect);
+            
     }
     else if (*o->midAir){
         Video_setPos(o->Attack,0);
@@ -442,8 +485,11 @@ void Sword_asItem(void* obj,SDL_FPoint* point){
     SDL_RenderCopyF(renderer,o->txt,NULL,&rect);
 }
 
-void* Sword_create(Sprite* owner,int* moving,int* midAir){
+void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir){
     Sword* res=malloc(sizeof(Sword));
+    res->attacks_pos=CreateVector(sizeof(Video*));
+    Vector_Resize(attacks_pos,8);
+    res->dir=dir;
     res->moving=moving;
     res->midAir=midAir;
     res->angle=0.f;
@@ -462,7 +508,6 @@ void* Sword_create(Sprite* owner,int* moving,int* midAir){
     }
     SDL_UnlockTexture(res->txt);
     res->cd=0.f;
-    res->Attack=Video_CopyShallow(plr_animWithSwordAttack);
     res->Idle=Video_CopyShallow(plr_animWithSwordIdle);
     res->Calm=Video_CopyShallow(plr_animWithSwordCalm);
     res->MidAir=Video_CopyShallow(plr_animWithSwordMidAir);
@@ -503,6 +548,7 @@ int lastHp;
 int mx,my;
 int pressed=0;
 int plr_walking=0;
+int plr_dir=0;
 
 void GameOver(void){
     quit();
@@ -583,6 +629,21 @@ void loop(void){
         plr_wep->onFire((void*)plr_wep,sprites);
     }
 
+    if (keys[SDL_SCANCODE_UP])
+      if (keys[SDL_SCANCODE_RIGHT])
+        plr_dir=DIR_UP_RIGHT
+      else if (keys[SDL_SCANCODE_LEFT])
+        plr_dir=DIR_UP_LEFT
+      else
+          plr_dir=DIR_UP
+    if (keys[SDL_SCANCODE_DOWN])
+      if (keys[SDL_SCANCODE_RIGHT])
+        plr_dir=DIR_DOWN_RIGHT
+      else if (keys[SDL_SCANCODE_LEFT])
+        plr_dir=DIR_DOWN_LEFT
+      else
+          plr_dir=DIR_DOWN
+
     plr.x+=plr_dx;
 
     VECTOR_FOR(walls,i,SDL_FRect){
@@ -660,7 +721,7 @@ void loop(void){
 
 void init1(){
     lastHp=plr_hp;
-    plr_wep=Sword_create(&plr_sprite,&plr_walking,&plr_inAir);
+    plr_wep=Sword_create(&plr_sprite,&plr_walking,&plr_inAir,&plr_dir);
     walls=CreateVector(sizeof(SDL_FRect));
     sprites=CreateVector(sizeof(Sprite*));
     Vector_Resize(sprites,1024);
@@ -703,8 +764,7 @@ int main(){
     plr_anim=Video_create("assets/plr_anim",renderer,12,&dt);
     plr_animWithSwordIdle=Video_create(
         "assets/plr_animWithSwordIdle",renderer,6,&dt);
-    plr_animWithSwordAttack=Video_create(
-        "assets/plr_animWithSwordAttack",renderer,10,&dt);
+    plr_animWithSwordAttack=CreateVector(sizeof(Video*));
     plr_animWithSwordCalm=Video_create(
         "assets/plr_animWithSwordCalm",renderer,6,&dt);
     plr_animWithSwordMidAir=Video_create(
