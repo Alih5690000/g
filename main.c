@@ -42,6 +42,7 @@ Video* plr_animWithSwordIdle;
 Video* plr_animWithSwordCalm;
 Vector* plr_animWithSwordAttack;
 Video* plr_animWithSwordMidAir;
+Video* plr_animLegsWalking;
 void(*lastloop) () ;
 void(*currloop) () ;
 void switch_loop(void(*to) ()) {
@@ -394,6 +395,7 @@ typedef struct Sword{
     int* moving;
     int* midAir;
     Vector* attacks_pos;
+    Video* legsAnim;
     Video* Idle;
     Video* Calm;
     Video* MidAir;
@@ -477,6 +479,8 @@ void Sword_update(void* obj){
         emscripten_log(EM_LOG_CONSOLE,"anim on branch dir %d",*o->dir);
         Video_setPos(o->MidAir,0);
         Video_setPos(o->Calm,0);
+        Video_setPos(o->Idle,0);
+        Video_setPos(o->legsAnim,0);
         emscripten_log(EM_LOG_CONSOLE,"Before setting attacking poses");
         for (int i=1;i<Vector_Size(o->attacks_pos);i++){
             if (*o->dir!=i)
@@ -487,11 +491,16 @@ void Sword_update(void* obj){
         SDL_RenderCopyF(renderer,
             Video_getFrame(*(Video**)Vector_Get(o->attacks_pos,*o->dir)),
             NULL,o->base.owner->rect);
+        SDL_RenderCopyF(renderer,
+            Video_getFrame(o->legsAnim),
+            NULL,o->base.owner->rect);
             
     }
     else if (*o->midAir){
         emscripten_log(EM_LOG_CONSOLE,"midAir branch");
         Video_setPos(o->Calm,0);
+        Video_setPos(o->Idle,0);
+        Video_setPos(o->legsAnim,0);
         emscripten_log(EM_LOG_CONSOLE,"Before setting attacking poses");
         for (int i=1;i<Vector_Size(o->attacks_pos);i++){
             Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
@@ -505,6 +514,8 @@ void Sword_update(void* obj){
     else if (*o->moving){
         emscripten_log(EM_LOG_CONSOLE,"moving branch");
         Video_setPos(o->Calm,0);
+        Video_setPos(o->Idle,0);
+        Video_setPos(o->legsAnim,0);
         emscripten_log(EM_LOG_CONSOLE,"Before setting attacking poses");
         for (int i=1;i<Vector_Size(o->attacks_pos);i++){
             Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
@@ -517,7 +528,9 @@ void Sword_update(void* obj){
     }
     else{
         emscripten_log(EM_LOG_CONSOLE,"idle branch");
-        Video_setPos(o->Idle,0);
+        Video_setPos(o->Calm,0);
+        Video_setPos(o->MidAir,0);
+        Video_setPos(o->legsAnim,0);
         emscripten_log(EM_LOG_CONSOLE,"Before setting attacking poses");
         for (int i=1;i<Vector_Size(o->attacks_pos);i++){
             Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
@@ -560,6 +573,7 @@ void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir){
     }
     SDL_UnlockTexture(res->txt);
     res->cd=0.f;
+    res->legsAnim=Video_CopyShallow(plr_animLegsWalking);
     res->Idle=Video_CopyShallow(plr_animWithSwordIdle);
     res->Calm=Video_CopyShallow(plr_animWithSwordCalm);
     res->MidAir=Video_CopyShallow(plr_animWithSwordMidAir);
@@ -831,6 +845,8 @@ int main(){
         "assets/plr_animWithSwordCalm",renderer,6,&dt);
     plr_animWithSwordMidAir=Video_create(
         "assets/plr_animWithSwordMidAir",renderer,6,&dt);
+    plr_animLegsWalking=Video_create(
+        "assets/plr_animLegsWalking",renderer,6,&dt);
     start=SDL_GetTicks();
     end=SDL_GetTicks();
 
