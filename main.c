@@ -43,6 +43,7 @@ Video* plr_animWithSwordCalm;
 Vector* plr_animWithSwordAttack;
 Video* plr_animWithSwordMidAir;
 Video* plr_animLegsWalking;
+Vector* plr_animWithSwordAttacks;
 void(*lastloop) () ;
 void(*currloop) () ;
 void switch_loop(void(*to) ()) {
@@ -549,10 +550,20 @@ void Sword_asItem(void* obj,SDL_FPoint* point){
     SDL_RenderCopyF(renderer,o->txt,NULL,&rect);
 }
 
+Vector* CopyVideosShallow(Vector* v){
+    Vector* res=CreateVector(sizeof(Video*));
+    Vector_Resize(res,Vector_Size(v));
+    for (int i=0;i<Vector_Size(v);i++){
+        Video* t=Video_CopyShallow(Vector_Get(v,i));
+        Vector_PushBack(res,&t);
+    }
+    return res;
+}
+
 void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir){
     Sword* res=malloc(sizeof(Sword));
     emscripten_log(EM_LOG_CONSOLE,"Before loading poses");
-    res->attacks_pos=LoadPoses("assets/plr_animWithSwordAttacks");
+    res->attacks_pos=CopyVideosShallow(plr_animWithSwordAttacks);
     emscripten_log(EM_LOG_CONSOLE,"Overall %d vectors",Vector_Size(res->attacks_pos));
     res->dir=dir;
     res->moving=moving;
@@ -847,6 +858,7 @@ int main(){
         "assets/plr_animWithSwordMidAir",renderer,6,&dt);
     plr_animLegsWalking=Video_create(
         "assets/plr_animLegsWalking",renderer,6,&dt);
+    plr_animWithSwordAttacks=LoadPoses("assets/plr_animWithSwordAttack");
     start=SDL_GetTicks();
     end=SDL_GetTicks();
 
