@@ -542,6 +542,7 @@ void Sword_update(void* obj){
         }
         emscripten_log(EM_LOG_CONSOLE,"After setting attacking poses");
         Video_update(o->Calm);
+        emscripten_log(EM_LOG_CONSOLE,"pos %d",Video_getPos(o->Calm));
         SDL_RenderCopyF(renderer,
             Video_getFrame(o->Calm),
             NULL,o->base.owner->rect);
@@ -868,7 +869,7 @@ int main(){
         "assets/plr_animWithSwordIdle",renderer,6,&dt);
     plr_animWithSwordAttack=CreateVector(sizeof(Video*));
     plr_animWithSwordCalm=Video_create(
-        "assets/plr_animWithSwordCalm",renderer,6,&dt);
+        "assets/plr_animWithSwordCalm",renderer,12,&dt);
     plr_animWithSwordMidAir=Video_create(
         "assets/plr_animWithSwordMidAir",renderer,6,&dt);
     plr_animLegsWalking=Video_create(
