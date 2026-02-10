@@ -464,20 +464,17 @@ void Sword_update(void* obj){
     SDL_FRect ownerRect=*(o->base.owner->rect);
     SDL_FRect drawRect={ownerRect.x+(ownerRect.w/2.f)-75.f,ownerRect.y+(ownerRect.h/2.f),
         75.f,10.f};
-    if (o->animOn){
-        o->timeAttacking-=dt;
-        if (o->timeAttacking<=0.f){
-            o->timeAttacking=0.f;
-            o->animOn=0;
-        }
-    }
-
     for (int i=0;i<Vector_Size(o->attacks_pos);i++){
         Video** vv = Vector_Get(o->attacks_pos,i);
         emscripten_log(EM_LOG_CONSOLE,"ptr=%p val=%p",vv,*vv);
     }
 
-    if (o->animOn){
+    o->base.owner->rect->x=floorf(o->base.owner->rect->x);
+    o->base.owner->rect->y=floorf(o->base.owner->rect->y);
+    o->base.owner->rect->w=floorf(o->base.owner->rect->w);
+    o->base.owner->rect->h=floorf(o->base.owner->rect->h);
+
+    if (o->animOn && *o->dir!=0){
         emscripten_log(EM_LOG_CONSOLE,"anim on branch dir %d",*o->dir);
         Video_setPos(o->MidAir,0);
         Video_setPos(o->Calm,0);
@@ -497,7 +494,7 @@ void Sword_update(void* obj){
                 NULL,o->base.owner->rect);
         else
             SDL_RenderCopyF(renderer,
-                Vector_Get(o->legsAnim->frames,1),
+                Video_getFrameEx(o->legsAnim,0),
                 NULL,o->base.owner->rect);
         if (*o->dir!=0)
             SDL_RenderCopyF(renderer,
@@ -549,6 +546,14 @@ void Sword_update(void* obj){
             Video_getFrame(o->Calm),
             NULL,o->base.owner->rect);
     }
+    if (o->animOn){
+        o->timeAttacking-=dt;
+        if (o->timeAttacking<=0.f){
+            o->timeAttacking=0.f;
+            o->animOn=0;
+        }
+    }
+
 }
 
 void Sword_asItem(void* obj,SDL_FPoint* point){
@@ -659,7 +664,7 @@ void loop(void){
                 emscripten_log(EM_LOG_CONSOLE,"rect at %.2f %.2f",plr.x,plr.y);
         }
         if (e.type==SDL_KEYDOWN){
-            if (e.key.keysym.sym==SDLK_f){
+            if (e.key.keysym.sym==SDLK_p){
                 if (fullscreen==0){
                     emscripten_request_fullscreen("#canvas",1);
                     fullscreen=1;
@@ -848,6 +853,7 @@ struct {
 } Game2;
 
 int main(){
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
     emscripten_log(EM_LOG_CONSOLE,"Lets go");
     SDL_Init(SDL_INIT_EVERYTHING);
     IMG_Init(IMG_INIT_PNG);

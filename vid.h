@@ -88,6 +88,16 @@ SDL_Texture* Video_getFrame(Video* v){
     return res;
 }
 
+SDL_Texture* Video_getFrameEx(Video*o, size_t index){
+    if (index>=Vector_Size(o->frames)){
+        const char* mes="Out of range: Video getFrameEx";
+        memcpy(__errbuf,mes,strlen(mes)+1);
+        return NULL;
+    }
+    SDL_Texture* res=*((SDL_Texture**)Vector_Get(o->frames,index));
+    return res;
+}
+
 void Video_destroy(Video* v){
     Vector_Free(v->frames);
     free(v);
@@ -126,6 +136,8 @@ Video* Video_CopyShallow(Video* o){
     }
     return res;
 }
+
+
 
 Video* Video_CopyDeep(Video* o){
     Video* res=malloc(sizeof(Video));
