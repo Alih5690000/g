@@ -88,6 +88,10 @@ SDL_Texture* Video_getFrame(Video* v){
     return res;
 }
 
+void Video_setFps(Video* v,float fps){
+    v->fps=fps;
+}
+
 SDL_Texture* Video_getFrameEx(Video*o, size_t index){
     if (index>=Vector_Size(o->frames)){
         const char* mes="Out of range: Video getFrameEx";

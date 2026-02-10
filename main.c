@@ -81,7 +81,6 @@ void BloodParticle_update(void* obj){
     o->lifetime-=dt;
     if (o->lifetime<=0.f){ 
         o->base.active=0;
-        emscripten_log(EM_LOG_CONSOLE,"BloodParticle lifetime ended");
         return;
     }
     float weight=1.f;
@@ -112,7 +111,6 @@ void BloodParticle_destroy(void* obj){
 BloodParticle* BloodParticle_create(float dy,float dx,SDL_FRect rect,Vector* sprites,Vector* collisions){
     BloodParticle* o=malloc(sizeof(BloodParticle));
     if (!o){
-        emscripten_log(EM_LOG_ERROR,"Allocation failed");
         return NULL;
     }
     {
@@ -202,7 +200,6 @@ typedef struct Enemy{
 void Enemy_update(void* obj){
     Enemy* o=(Enemy*)obj;
     if (o->base.hp<=0){
-        emscripten_log(EM_LOG_CONSOLE,"died");
         o->base.active=0;
         {
             PuddleOfBlood* a=PuddleOfBlood_create((SDL_FRect){o->base.rect->x,
@@ -248,9 +245,6 @@ void Enemy_update(void* obj){
             Vector_PushBack(o->base.sprites,&tmp);
             VECTOR_FOR(o->base.sprites,i,Sprite*){
                 Sprite* s=*i;
-                emscripten_log(EM_LOG_CONSOLE,
-                "sprite=%p update=%p destroy=%p",
-                s, s->update, s->destroy);
             }
         }
     }
@@ -363,7 +357,6 @@ typedef struct Weapon{
 } Weapon;
 
 Vector* LoadPoses(const char* path){
-    emscripten_log(EM_LOG_CONSOLE,"Loading poses from %s",path);    
     Vector* res=CreateVector(sizeof(Video*));
     Vector_Resize(res,9);
     char buf[256];
@@ -466,7 +459,6 @@ void Sword_update(void* obj){
         75.f,10.f};
     for (int i=0;i<Vector_Size(o->attacks_pos);i++){
         Video** vv = Vector_Get(o->attacks_pos,i);
-        emscripten_log(EM_LOG_CONSOLE,"ptr=%p val=%p",vv,*vv);
     }
 
     o->base.owner->rect->x=floorf(o->base.owner->rect->x);
@@ -475,19 +467,15 @@ void Sword_update(void* obj){
     o->base.owner->rect->h=floorf(o->base.owner->rect->h);
 
     if (o->animOn && *o->dir!=0){
-        emscripten_log(EM_LOG_CONSOLE,"anim on branch dir %d",*o->dir);
         Video_setPos(o->MidAir,0);
         Video_setPos(o->Calm,0);
         Video_setPos(o->Idle,0);
-        emscripten_log(EM_LOG_CONSOLE,"Before setting attacking poses");
         for (int i=1;i<Vector_Size(o->attacks_pos);i++){
             if (*o->dir!=i)
                 Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
         }
-        emscripten_log(EM_LOG_CONSOLE,"After setting attacking poses");
         Video_update(*(Video**)Vector_Get(o->attacks_pos,*o->dir));
         Video_update(o->legsAnim);
-        emscripten_log(EM_LOG_CONSOLE,"pos %d",*o->dir);
         if (*o->moving)
             SDL_RenderCopyF(renderer,
                 Video_getFrame(o->legsAnim),
@@ -502,47 +490,37 @@ void Sword_update(void* obj){
                 NULL,o->base.owner->rect);
     }
     else if (*o->midAir){
-        emscripten_log(EM_LOG_CONSOLE,"midAir branch");
         Video_setPos(o->Calm,0);
         Video_setPos(o->Idle,0);
         Video_setPos(o->legsAnim,0);
-        emscripten_log(EM_LOG_CONSOLE,"Before setting attacking poses");
         for (int i=1;i<Vector_Size(o->attacks_pos);i++){
             Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
         }
-        emscripten_log(EM_LOG_CONSOLE,"After setting attacking poses");
         Video_update(o->MidAir);
         SDL_RenderCopyF(renderer,
             Video_getFrame(o->MidAir),
             NULL,o->base.owner->rect);
     }
     else if (*o->moving){
-        emscripten_log(EM_LOG_CONSOLE,"moving branch");
         Video_setPos(o->Calm,0);
-        Video_setPos(o->Idle,0);
+        Video_setPos(o->MidAir,0);
         Video_setPos(o->legsAnim,0);
-        emscripten_log(EM_LOG_CONSOLE,"Before setting attacking poses");
         for (int i=1;i<Vector_Size(o->attacks_pos);i++){
             Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
         }
-        emscripten_log(EM_LOG_CONSOLE,"After setting attacking poses");
         Video_update(o->Idle);
         SDL_RenderCopyF(renderer,
             Video_getFrame(o->Idle),
             NULL,o->base.owner->rect);
     }
     else{
-        emscripten_log(EM_LOG_CONSOLE,"idle branch");
-        Video_setPos(o->Calm,0);
         Video_setPos(o->MidAir,0);
         Video_setPos(o->legsAnim,0);
-        emscripten_log(EM_LOG_CONSOLE,"Before setting attacking poses");
+        Video_setPos(o->Idle,0);
         for (int i=1;i<Vector_Size(o->attacks_pos);i++){
             Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
         }
-        emscripten_log(EM_LOG_CONSOLE,"After setting attacking poses");
         Video_update(o->Calm);
-        emscripten_log(EM_LOG_CONSOLE,"pos %d",Video_getPos(o->Calm));
         SDL_RenderCopyF(renderer,
             Video_getFrame(o->Calm),
             NULL,o->base.owner->rect);
@@ -567,7 +545,6 @@ Vector* CopyVideosShallow(Vector* v){
     Vector* res=CreateVector(sizeof(Video*));
     Vector_Resize(res,Vector_Size(v));
     for (int i=0;i<Vector_Size(v);i++){
-        emscripten_log(EM_LOG_CONSOLE,"Loop %d",i);
         Video* t=Video_CopyShallow(*(Video**)Vector_Get(v,i));
         Vector_PushBack(res,&t);
     }
@@ -576,10 +553,8 @@ Vector* CopyVideosShallow(Vector* v){
 
 void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir){
     Sword* res=malloc(sizeof(Sword));
-    emscripten_log(EM_LOG_CONSOLE,"Before copying poses");
     //res->attacks_pos=CopyVideosShallow(plr_animWithSwordAttacks);
     res->attacks_pos=plr_animWithSwordAttacks;
-    emscripten_log(EM_LOG_CONSOLE,"Overall %d vectors",Vector_Size(res->attacks_pos));
     res->dir=dir;
     res->moving=moving;
     res->midAir=midAir;
@@ -661,10 +636,6 @@ void loop(void){
         if (e.type==SDL_QUIT)
             quit();
         if (e.type==SDL_KEYDOWN){
-            if (e.key.keysym.sym==SDLK_r)
-                emscripten_log(EM_LOG_CONSOLE,"rect at %.2f %.2f",plr.x,plr.y);
-        }
-        if (e.type==SDL_KEYDOWN){
             if (e.key.keysym.sym==SDLK_p){
                 if (fullscreen==0){
                     emscripten_request_fullscreen("#canvas",1);
@@ -678,8 +649,6 @@ void loop(void){
         }
         if (e.type==SDL_MOUSEBUTTONDOWN){
             if (e.button.button==SDL_BUTTON_LEFT){
-                emscripten_log(EM_LOG_CONSOLE,"Mouse at %d %d",e.button.x,e.button.y);
-
                 mx = e.button.x-300;
                 my = e.button.y;
 
@@ -802,9 +771,7 @@ void loop(void){
             }
         }
         
-        emscripten_log(EM_LOG_CONSOLE,"Before updating weapon");
         plr_wep->update((void*)plr_wep);
-        emscripten_log(EM_LOG_CONSOLE,"After updating weapon");
         if (plr_hp<=0) GameOver();
         SDL_SetRenderDrawColor(renderer,255,0,0,RedScreenAlpha);
         SDL_RenderFillRect(renderer,NULL);
@@ -841,21 +808,16 @@ void init1(){
     }
     VECTOR_FOR(sprites,i,Sprite*){
         Sprite* s=*i;
-        emscripten_log(EM_LOG_CONSOLE,
-        "sprite=%p update=%p destroy=%p",
-        s, s->update, s->destroy);
     }
 }
 
 struct {
   Vector* walls;
   Vector* sprites;
-  
 } Game2;
 
 int main(){
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
-    emscripten_log(EM_LOG_CONSOLE,"Lets go");
     SDL_Init(SDL_INIT_EVERYTHING);
     IMG_Init(IMG_INIT_PNG);
     window=SDL_CreateWindow("Game",0,0,1000,800,SDL_WINDOW_SHOWN);
@@ -869,22 +831,17 @@ int main(){
         "assets/plr_animWithSwordIdle",renderer,6,&dt);
     plr_animWithSwordAttack=CreateVector(sizeof(Video*));
     plr_animWithSwordCalm=Video_create(
-        "assets/plr_animWithSwordCalm",renderer,12,&dt);
+        "assets/plr_animWithSwordCalm",renderer,6,&dt);
     plr_animWithSwordMidAir=Video_create(
         "assets/plr_animWithSwordMidAir",renderer,6,&dt);
     plr_animLegsWalking=Video_create(
         "assets/plr_animLegsWalking",renderer,12,&dt);
-    emscripten_log(EM_LOG_CONSOLE,"legs anim length %d",
-        Vector_Size(plr_animLegsWalking->frames));
     plr_animWithSwordAttacks=LoadPoses("assets/plr_animWithSwordAttacks");
-    emscripten_log(EM_LOG_CONSOLE,"Right poses length %d",
-        Vector_Size((*(Video**)Vector_Get(plr_animWithSwordAttacks,DIR_RIGHT))->frames));
     start=SDL_GetTicks();
     end=SDL_GetTicks();
 
     init1();
 
-    emscripten_log(EM_LOG_CONSOLE,"Loop started");
     currloop=loop;
     emscripten_set_main_loop(currloop,-1,0);
     return 0;
