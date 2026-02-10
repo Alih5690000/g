@@ -389,12 +389,13 @@ Vector* LoadPoses(const char* path){
 
 typedef struct Sword{
     Weapon base;
-    float angle;
+    float timeAttacking;
     int damage;
     int animOn;
     float cd;
     int* moving;
     int* midAir;
+    int lastLoops;
     Vector* attacks_pos;
     Video* legsAnim;
     Video* Idle;
@@ -454,7 +455,7 @@ void Sword_onFire(void* obj,Vector* ens){
     }
     o->base.owner->hp=backup_hp;
     o->animOn=1;
-    o->angle=360.f;
+    o->timeAttacking=0.5f;
 }
 
 void Sword_update(void* obj){
@@ -464,9 +465,9 @@ void Sword_update(void* obj){
     SDL_FRect drawRect={ownerRect.x+(ownerRect.w/2.f)-75.f,ownerRect.y+(ownerRect.h/2.f),
         75.f,10.f};
     if (o->animOn){
-        o->angle-=720*dt;
-        if (o->angle<0.f){
-            o->angle=0;
+        o->timeAttacking-=dt;
+        if (o->timeAttacking<=0.f){
+            o->timeAttacking=0.f;
             o->animOn=0;
         }
     }
@@ -481,7 +482,6 @@ void Sword_update(void* obj){
         Video_setPos(o->MidAir,0);
         Video_setPos(o->Calm,0);
         Video_setPos(o->Idle,0);
-        Video_setPos(o->legsAnim,0);
         emscripten_log(EM_LOG_CONSOLE,"Before setting attacking poses");
         for (int i=1;i<Vector_Size(o->attacks_pos);i++){
             if (*o->dir!=i)
@@ -489,13 +489,20 @@ void Sword_update(void* obj){
         }
         emscripten_log(EM_LOG_CONSOLE,"After setting attacking poses");
         Video_update(*(Video**)Vector_Get(o->attacks_pos,*o->dir));
-        SDL_RenderCopyF(renderer,
-            Video_getFrame(*(Video**)Vector_Get(o->attacks_pos,*o->dir)),
-            NULL,o->base.owner->rect);
-        SDL_RenderCopyF(renderer,
-            Video_getFrame(o->legsAnim),
-            NULL,o->base.owner->rect);
-            
+        Video_update(o->legsAnim);
+        emscripten_log(EM_LOG_CONSOLE,"pos %d",*o->dir);
+        if (*o->moving)
+            SDL_RenderCopyF(renderer,
+                Video_getFrame(o->legsAnim),
+                NULL,o->base.owner->rect);
+        else
+            SDL_RenderCopyF(renderer,
+                Vector_Get(o->legsAnim->frames,1),
+                NULL,o->base.owner->rect);
+        if (*o->dir!=0)
+            SDL_RenderCopyF(renderer,
+                Video_getFrame(*(Video**)Vector_Get(o->attacks_pos,*o->dir)),
+                NULL,o->base.owner->rect);
     }
     else if (*o->midAir){
         emscripten_log(EM_LOG_CONSOLE,"midAir branch");
@@ -554,7 +561,8 @@ Vector* CopyVideosShallow(Vector* v){
     Vector* res=CreateVector(sizeof(Video*));
     Vector_Resize(res,Vector_Size(v));
     for (int i=0;i<Vector_Size(v);i++){
-        Video* t=Video_CopyShallow(Vector_Get(v,i));
+        emscripten_log(EM_LOG_CONSOLE,"Loop %d",i);
+        Video* t=Video_CopyShallow(*(Video**)Vector_Get(v,i));
         Vector_PushBack(res,&t);
     }
     return res;
@@ -562,13 +570,14 @@ Vector* CopyVideosShallow(Vector* v){
 
 void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir){
     Sword* res=malloc(sizeof(Sword));
-    emscripten_log(EM_LOG_CONSOLE,"Before loading poses");
-    res->attacks_pos=CopyVideosShallow(plr_animWithSwordAttacks);
+    emscripten_log(EM_LOG_CONSOLE,"Before copying poses");
+    //res->attacks_pos=CopyVideosShallow(plr_animWithSwordAttacks);
+    res->attacks_pos=plr_animWithSwordAttacks;
     emscripten_log(EM_LOG_CONSOLE,"Overall %d vectors",Vector_Size(res->attacks_pos));
     res->dir=dir;
     res->moving=moving;
     res->midAir=midAir;
-    res->angle=0.f;
+    res->timeAttacking=0.f;
     res->animOn=0;
     res->damage=10;
     res->txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
@@ -702,7 +711,7 @@ void loop(void){
         plr_canDash=1;
     }
     Uint32 mstate=SDL_GetMouseState(NULL,NULL);
-    if (mstate & SDL_BUTTON_LMASK){
+    if (keys[SDL_SCANCODE_F]){
         plr_wep->onFire((void*)plr_wep,sprites);
     }
 
@@ -763,10 +772,10 @@ void loop(void){
     SDL_SetRenderTarget(renderer,Wtexture);
 
     {
-        SDL_SetRenderDrawColor(renderer,0,0,0,255);
+        SDL_SetRenderDrawColor(renderer,100,100,100,255);
         SDL_RenderClear(renderer);
         SDL_SetRenderDrawColor(renderer,255,255,255,255);
-        SDL_SetRenderDrawColor(renderer,100,100,100,255);
+        SDL_SetRenderDrawColor(renderer,150,150,150,255);
         VECTOR_FOR(walls,i,SDL_FRect){
             SDL_RenderFillRectF(renderer,i);
         }
@@ -857,8 +866,12 @@ int main(){
     plr_animWithSwordMidAir=Video_create(
         "assets/plr_animWithSwordMidAir",renderer,6,&dt);
     plr_animLegsWalking=Video_create(
-        "assets/plr_animLegsWalking",renderer,6,&dt);
-    plr_animWithSwordAttacks=LoadPoses("assets/plr_animWithSwordAttack");
+        "assets/plr_animLegsWalking",renderer,12,&dt);
+    emscripten_log(EM_LOG_CONSOLE,"legs anim length %d",
+        Vector_Size(plr_animLegsWalking->frames));
+    plr_animWithSwordAttacks=LoadPoses("assets/plr_animWithSwordAttacks");
+    emscripten_log(EM_LOG_CONSOLE,"Right poses length %d",
+        Vector_Size((*(Video**)Vector_Get(plr_animWithSwordAttacks,DIR_RIGHT))->frames));
     start=SDL_GetTicks();
     end=SDL_GetTicks();
 

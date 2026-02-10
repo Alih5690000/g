@@ -42,6 +42,7 @@ typedef struct Video{
     SDL_Renderer* renderer;
     float fps;
     float* dt;
+    int loops;
     float acc;
 } Video;
 
@@ -50,6 +51,7 @@ Video* Video_create(const char* name, SDL_Renderer* r,int fps,float* dt){
     v->renderer=r;
     v->fps=fps;
     v->acc=0.f;
+    v->loops=0;
     v->frames=CreateVector(sizeof(SDL_Texture*));
     Vector_Resize(v->frames,1024);
     v->dt=dt;
@@ -92,21 +94,29 @@ void Video_destroy(Video* v){
 }
 
 void Video_update(Video* v){
+    if (!v) return;
     v->acc+=*v->dt;
     while(v->acc>=1.f/(v->fps)){
         v->acc-=1.f/(v->fps);
         v->pos+=1;
     }
     if (v->pos>=Vector_Size(v->frames)){
+        v->loops++;
         v->pos=0;
     }
+}
+
+int Video_getLoops(Video* v){
+    return v->loops;
 }
 
 Video* Video_CopyShallow(Video* o){
     Video* res=malloc(sizeof(Video));
     res->renderer=o->renderer;
     res->fps=o->fps;
-    res->acc=o->acc;
+    res->acc=0.f;
+    res->pos = 0;
+    res->loops = 0;
     res->dt=o->dt;
     res->frames=CreateVector(sizeof(SDL_Texture*));
     Vector_Resize(res->frames,Vector_Size(o->frames));
@@ -122,6 +132,8 @@ Video* Video_CopyDeep(Video* o){
     res->renderer=o->renderer;
     res->fps=o->fps;
     res->acc=o->acc;
+    res->pos = o->pos;
+    res->loops = o->loops;
     res->dt=o->dt;
     res->frames=CreateVector(sizeof(SDL_Texture*));
     Vector_Resize(res->frames,Vector_Size(o->frames));
