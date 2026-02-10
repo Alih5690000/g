@@ -835,7 +835,7 @@ int main(){
     plr_animWithSwordMidAir=Video_create(
         "assets/plr_animWithSwordMidAir",renderer,6,&dt);
     plr_animLegsWalking=Video_create(
-        "assets/plr_animLegsWalking",renderer,12,&dt);
+        "assets/plr_animWithSwordLegsWalking",renderer,12,&dt);
     plr_animWithSwordAttacks=LoadPoses("assets/plr_animWithSwordAttacks");
     start=SDL_GetTicks();
     end=SDL_GetTicks();
