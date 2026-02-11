@@ -381,7 +381,7 @@ Vector* LoadPoses(const char* path){
     char buf[256];
     Vector_PushBack(res,&(Video*){NULL});
     snprintf(buf,256,"%s/Up",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
+    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});//check it's size
     snprintf(buf,256,"%s/UpRight",path);
     Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
     snprintf(buf,256,"%s/Right",path);
@@ -390,15 +390,18 @@ Vector* LoadPoses(const char* path){
     Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
     snprintf(buf,256,"%s/Down",path);
     Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
+    
     Vector_PushBack(res,&(Video*){CreateReversed(
         *(Video**)Vector_Get(res,DIR_DOWN_RIGHT)
     )});
+    
     Vector_PushBack(res,&(Video*){CreateReversed(
-        *(Video**)Vector_Get(res,DIR_LEFT)
+        *(Video**)Vector_Get(res,DIR_RIGHT)
     )});
     Vector_PushBack(res,&(Video*){CreateReversed(
         *(Video**)Vector_Get(res,DIR_UP_RIGHT)
     )});
+    
     return res;
 }
 
@@ -496,6 +499,7 @@ void Sword_update(void* obj){
         Video_setPos(o->MidAir,0);
         Video_setPos(o->Calm,0);
         Video_setPos(o->Idle,0);
+        emscripten_log(1,"Dir %d",*o->dir);
         for (int i=1;i<Vector_Size(o->attacks_pos);i++){
             if (*o->dir!=i)
                 Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
@@ -515,7 +519,7 @@ void Sword_update(void* obj){
         }
         else{
             Video_update(o->legsAnim2);
-            emscripten_log(EM_LOG_CONSOLE,"anim2 pos: %d",Video_getPos(o->legsAnim2));
+            
             Video_setPos(o->legsAnim,0);
             SDL_RenderCopyF(renderer,
                 Video_getFrame(o->legsAnim2),
@@ -524,14 +528,21 @@ void Sword_update(void* obj){
         if (*o->dir!=0){
             for (int i=0;i<Array_size(o->lowPosAt);i++){
                 if (Video_getPos(o->legsAnim2)==*(int*)Array_get(o->lowPosAt,i)){
-                    emscripten_log(1,"Lower");
                     drawRect.y-=*(int*)Array_get(o->offsets,i);
                     break;
                 }
             }
-            SDL_RenderCopyF(renderer,
-                Video_getFrame(*(Video**)Vector_Get(o->attacks_pos,*o->dir)),
+            Video* t=*(Video**)Vector_Get(o->attacks_pos,*o->dir);
+            emscripten_log(1,"size %d",Vector_Size(t->frames));
+
+            int res=SDL_RenderCopyF(renderer,
+                Video_getFrame(t),
                 NULL,&drawRect);
+            if (res){
+                emscripten_log(1,"Error:%s",SDL_GetError());
+                emscripten_log(1,"txt adress %p",
+                    t);
+            }
         }
     }
     else if (*o->midAir){
@@ -592,13 +603,14 @@ void Sword_asItem(void* obj,SDL_FPoint* point){
 Vector* CopyVideosShallow(Vector* v){
     Vector* res=CreateVector(sizeof(Video*));
     Vector_Resize(res,Vector_Size(v));
-    emscripten_log(EM_LOG_CONSOLE,"Copying videos shallow, size: %d",Vector_Size(v));
+    
     for (int i=0;i<Vector_Size(v);i++){
-        Video* src=*(Video**)Vector_Get(v,i);
-        if (!src) continue;
-        Video* t=Video_CopyShallow(src);
+        Video** src=(Video**)Vector_Get(v,i);
+        if (!(*src)) continue;
+        Video* t=Video_CopyShallow(*src);
         Vector_PushBack(res,&t);
     }
+    
     return res;
 }
 
@@ -611,7 +623,6 @@ void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir){
     res->offsets=CreateArray(6,sizeof(int));
     Array_set(res->offsets,&(int){0},&(int){0},
         &(int){0},&(int){-1},&(int){-1},&(int){-1});
-    res->attacks_pos=plr_animWithSwordAttacks;
     res->dir=dir;
     res->moving=moving;
     res->lastX=owner->rect->x;
@@ -674,6 +685,7 @@ void GameOver(void){
 }
 
 void loop(void){
+    
 
     HandleDelta();
 
@@ -840,7 +852,7 @@ void loop(void){
     SDL_RenderPresent(renderer);
 }
 
-void init1(){
+void init1(){    
     lastHp=plr_hp;
     plr_wep=Sword_create(&plr_sprite,&plr_walking,&plr_inAir,&plr_dir);
     walls=CreateVector(sizeof(SDL_FRect));
