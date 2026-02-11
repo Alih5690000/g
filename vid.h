@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <SDL_image.h>
+#include <emscripten/html5.h>
 #include "vec.c"
 
 SDL_Texture* DeepCopyTexture(SDL_Renderer* renderer, SDL_Texture* src)
@@ -136,6 +137,7 @@ Video* Video_CopyShallow(Video* o){
     Vector_Resize(res->frames,Vector_Size(o->frames));
     for (int i=0;i<Vector_Size(o->frames);i++){
         SDL_Texture* t=*(SDL_Texture**)Vector_Get(o->frames,i);
+        emscripten_log(1,"Errors:%s",GetError());
         Vector_PushBack(res->frames,&t);
     }
     return res;

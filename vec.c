@@ -30,6 +30,7 @@ SOFTWARE.
 #include <errno.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <stdarg.h>
 
 #define VECTOR_FOR(obj,name,type) \
     for(type* name=(type*)__Vector_begin(obj);\
@@ -88,13 +89,23 @@ array* CreateArray(int size,int ellsize){
     return obj;
 }
 
-void* __Array_get(array* o,int index){
-    if (index>o->__size){
+void* Array_get(array* o,int index){
+    if (index>=o->__size){
         const char* mes="Out of range: array";
         memcpy(__errbuf,mes,strlen(mes)+1);
         return NULL;
     }
     return ((char*)(o->__data))+(o->__ellsize*index);
+}
+
+void Array_set(array*o,...){
+    va_list args;
+    va_start(args,o);
+    for (int i=0;i<o->__size;i++){
+        void* data=va_arg(args,void*);
+        memcpy(((char*)(o->__data))+(o->__ellsize*i),data,o->__ellsize);
+    }
+    va_end(args);
 }
 
 void Array_Free(array* o){

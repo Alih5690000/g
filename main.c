@@ -42,7 +42,8 @@ Video* plr_animWithSwordIdle;
 Video* plr_animWithSwordCalm;
 Vector* plr_animWithSwordAttack;
 Video* plr_animWithSwordMidAir;
-Video* plr_animLegsWalking;
+Video* plr_animWithSwordLegsWalking;
+Video* plr_animWithSwordLegsStaying;
 Vector* plr_animWithSwordAttacks;
 void(*lastloop) () ;
 void(*currloop) () ;
@@ -389,8 +390,11 @@ typedef struct Sword{
     int* moving;
     int* midAir;
     int lastLoops;
+    array* lowPosAt;
+    array* offsets;
     Vector* attacks_pos;
     Video* legsAnim;
+    Video* legsAnim2;
     Video* Idle;
     Video* Calm;
     Video* MidAir;
@@ -466,6 +470,8 @@ void Sword_update(void* obj){
     o->base.owner->rect->w=floorf(o->base.owner->rect->w);
     o->base.owner->rect->h=floorf(o->base.owner->rect->h);
 
+    drawRect=ownerRect;
+
     if (o->animOn && *o->dir!=0){
         Video_setPos(o->MidAir,0);
         Video_setPos(o->Calm,0);
@@ -475,24 +481,39 @@ void Sword_update(void* obj){
                 Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
         }
         Video_update(*(Video**)Vector_Get(o->attacks_pos,*o->dir));
-        Video_update(o->legsAnim);
-        if (*o->moving)
+        if (*o->moving){
+            Video_update(o->legsAnim);
+            Video_setPos(o->legsAnim2,0);
             SDL_RenderCopyF(renderer,
                 Video_getFrame(o->legsAnim),
-                NULL,o->base.owner->rect);
-        else
+                NULL,&drawRect);
+        }
+        else{
+            Video_update(o->legsAnim2);
+            emscripten_log(EM_LOG_CONSOLE,"anim2 pos: %d",Video_getPos(o->legsAnim2));
+            Video_setPos(o->legsAnim,0);
             SDL_RenderCopyF(renderer,
-                Video_getFrameEx(o->legsAnim,0),
-                NULL,o->base.owner->rect);
-        if (*o->dir!=0)
+                Video_getFrame(o->legsAnim2),
+                NULL,&drawRect);
+        }
+        if (*o->dir!=0){
+            for (int i=0;i<Array_size(o->lowPosAt);i++){
+                if (Video_getPos(o->legsAnim2)==*(int*)Array_get(o->lowPosAt,i)){
+                    emscripten_log(1,"Lower");
+                    drawRect.y+=*(int*)Array_get(o->offsets,i);
+                    break;
+                }
+            }
             SDL_RenderCopyF(renderer,
                 Video_getFrame(*(Video**)Vector_Get(o->attacks_pos,*o->dir)),
-                NULL,o->base.owner->rect);
+                NULL,&drawRect);
+        }
     }
     else if (*o->midAir){
         Video_setPos(o->Calm,0);
         Video_setPos(o->Idle,0);
         Video_setPos(o->legsAnim,0);
+        Video_setPos(o->legsAnim2,0);
         for (int i=1;i<Vector_Size(o->attacks_pos);i++){
             Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
         }
@@ -505,6 +526,7 @@ void Sword_update(void* obj){
         Video_setPos(o->Calm,0);
         Video_setPos(o->MidAir,0);
         Video_setPos(o->legsAnim,0);
+        Video_setPos(o->legsAnim2,0);
         for (int i=1;i<Vector_Size(o->attacks_pos);i++){
             Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
         }
@@ -516,6 +538,7 @@ void Sword_update(void* obj){
     else{
         Video_setPos(o->MidAir,0);
         Video_setPos(o->legsAnim,0);
+        Video_setPos(o->legsAnim2,0);
         Video_setPos(o->Idle,0);
         for (int i=1;i<Vector_Size(o->attacks_pos);i++){
             Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
@@ -544,8 +567,10 @@ void Sword_asItem(void* obj,SDL_FPoint* point){
 Vector* CopyVideosShallow(Vector* v){
     Vector* res=CreateVector(sizeof(Video*));
     Vector_Resize(res,Vector_Size(v));
-    for (int i=0;i<Vector_Size(v);i++){
-        Video* t=Video_CopyShallow(*(Video**)Vector_Get(v,i));
+    emscripten_log(EM_LOG_CONSOLE,"Copying videos shallow, size: %d",Vector_Size(v));
+    for (int i=1;i<Vector_Size(v);i++){
+        Video* src=*(Video**)Vector_Get(v,i);
+        Video* t=Video_CopyShallow(src);
         Vector_PushBack(res,&t);
     }
     return res;
@@ -553,7 +578,13 @@ Vector* CopyVideosShallow(Vector* v){
 
 void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir){
     Sword* res=malloc(sizeof(Sword));
-    //res->attacks_pos=CopyVideosShallow(plr_animWithSwordAttacks);
+    res->attacks_pos=CopyVideosShallow(plr_animWithSwordAttacks);
+    res->lowPosAt=CreateArray(6,sizeof(int));
+    Array_set(res->lowPosAt,&(int){0},&(int){0},
+        &(int){0},&(int){1},&(int){1},&(int){1});
+    //res->offsets=CreateArray(6,sizeof(int));
+    Array_set(res->offsets,&(int){0},&(int){0},
+        &(int){0},&(int){-25},&(int){-25},&(int){-25});
     res->attacks_pos=plr_animWithSwordAttacks;
     res->dir=dir;
     res->moving=moving;
@@ -574,7 +605,8 @@ void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir){
     }
     SDL_UnlockTexture(res->txt);
     res->cd=0.f;
-    res->legsAnim=Video_CopyShallow(plr_animLegsWalking);
+    res->legsAnim=Video_CopyShallow(plr_animWithSwordLegsWalking);
+    res->legsAnim2=Video_CopyShallow(plr_animWithSwordLegsStaying);
     res->Idle=Video_CopyShallow(plr_animWithSwordIdle);
     res->Calm=Video_CopyShallow(plr_animWithSwordCalm);
     res->MidAir=Video_CopyShallow(plr_animWithSwordMidAir);
@@ -834,8 +866,10 @@ int main(){
         "assets/plr_animWithSwordCalm",renderer,6,&dt);
     plr_animWithSwordMidAir=Video_create(
         "assets/plr_animWithSwordMidAir",renderer,6,&dt);
-    plr_animLegsWalking=Video_create(
-        "assets/plr_animWithSwordLegsWalking",renderer,12,&dt);
+    plr_animWithSwordLegsWalking=Video_create(
+        "assets/plr_animWithSwordLegsWalking",renderer,6,&dt);
+    plr_animWithSwordLegsStaying=Video_create(
+        "assets/plr_animWithSwordLegsStaying",renderer,6,&dt);
     plr_animWithSwordAttacks=LoadPoses("assets/plr_animWithSwordAttacks");
     start=SDL_GetTicks();
     end=SDL_GetTicks();
