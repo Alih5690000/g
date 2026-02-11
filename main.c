@@ -357,6 +357,24 @@ typedef struct Weapon{
     void(*destroy)(void*);
 } Weapon;
 
+Video* CreateReversed(Video* o){
+    Video* res=malloc(sizeof(Video));
+    res->renderer=o->renderer;
+    res->fps=o->fps;
+    res->acc=0.f;
+    res->pos = 0;
+    res->loops = 0;
+    res->dt=o->dt;
+    res->frames=CreateVector(sizeof(SDL_Texture*));
+    Vector_Resize(res->frames,Vector_Size(o->frames));
+    for (int i=Vector_Size(o->frames)-1;i>=0;i--){
+        SDL_Texture* t=*(SDL_Texture**)Vector_Get(o->frames,i);
+        SDL_Texture* n=DeepCopyTextureEx(o->renderer,t,SDL_FLIP_HORIZONTAL,0,NULL);
+        Vector_PushBack(res->frames,&n);
+    }
+    return res;
+}
+
 Vector* LoadPoses(const char* path){
     Vector* res=CreateVector(sizeof(Video*));
     Vector_Resize(res,9);
@@ -372,12 +390,15 @@ Vector* LoadPoses(const char* path){
     Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
     snprintf(buf,256,"%s/Down",path);
     Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
-    snprintf(buf,256,"%s/DownLeft",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
-    snprintf(buf,256,"%s/Left",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
-    snprintf(buf,256,"%s/UpLeft",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
+    Vector_PushBack(res,&(Video*){CreateReversed(
+        *(Video**)Vector_Get(res,DIR_DOWN_RIGHT)
+    )});
+    Vector_PushBack(res,&(Video*){CreateReversed(
+        *(Video**)Vector_Get(res,DIR_LEFT)
+    )});
+    Vector_PushBack(res,&(Video*){CreateReversed(
+        *(Video**)Vector_Get(res,DIR_UP_RIGHT)
+    )});
     return res;
 }
 
@@ -390,6 +411,7 @@ typedef struct Sword{
     int* moving;
     int* midAir;
     int lastLoops;
+    float lastX;
     array* lowPosAt;
     array* offsets;
     Vector* attacks_pos;
@@ -482,9 +504,14 @@ void Sword_update(void* obj){
         if (*o->moving){
             Video_update(o->legsAnim);
             Video_setPos(o->legsAnim2,0);
-            SDL_RenderCopyF(renderer,
-                Video_getFrame(o->legsAnim),
-                NULL,&drawRect);
+            if (o->lastX<ownerRect.x)
+                SDL_RenderCopyF(renderer,
+                    Video_getFrame(o->legsAnim),
+                    NULL,&drawRect);
+            else
+                SDL_RenderCopyExF(renderer,
+                    Video_getFrame(o->legsAnim2),
+                    NULL,&drawRect,0,NULL,SDL_FLIP_HORIZONTAL);
         }
         else{
             Video_update(o->legsAnim2);
@@ -587,10 +614,12 @@ void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir){
     res->attacks_pos=plr_animWithSwordAttacks;
     res->dir=dir;
     res->moving=moving;
+    res->lastX=owner->rect->x;
     res->midAir=midAir;
     res->timeAttacking=0.f;
     res->animOn=0;
     res->damage=10;
+
     res->txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_STREAMING,75,10);
     void* pixels;

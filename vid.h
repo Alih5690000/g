@@ -36,6 +36,37 @@ SDL_Texture* DeepCopyTexture(SDL_Renderer* renderer, SDL_Texture* src)
     return dst;
 }
 
+SDL_Texture* DeepCopyTextureEx(SDL_Renderer* renderer, SDL_Texture* src,
+    SDL_RendererFlip flip, double angle, SDL_Point* center)
+{
+    int w, h;
+    Uint32 format;
+    int access;
+
+    if (SDL_QueryTexture(src, &format, &access, &w, &h) != 0)
+        return NULL;
+
+    SDL_Texture* dst = SDL_CreateTexture(
+        renderer,
+        format,
+        SDL_TEXTUREACCESS_TARGET,
+        w,
+        h
+    );
+
+    if (!dst)
+        return NULL;
+
+    SDL_Texture* oldTarget = SDL_GetRenderTarget(renderer);
+
+    SDL_SetRenderTarget(renderer, dst);
+    SDL_RenderClear(renderer);
+    SDL_RenderCopyEx(renderer, src, NULL, NULL, angle, center, flip);
+
+    SDL_SetRenderTarget(renderer, oldTarget);
+
+    return dst;
+}
 
 typedef struct Video{
     Vector* frames;
