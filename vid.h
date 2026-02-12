@@ -115,6 +115,18 @@ Video* Video_create(const char* name, SDL_Renderer* r,int fps,float* dt){
     return v;
 }
 
+Video* Video_CreateDull(){
+    Video* v=(Video*)malloc(sizeof(Video));
+    v->renderer=NULL;
+    v->fps=0.f;
+    v->acc=0.f;
+    v->loops=0;
+    v->frames=CreateVector(sizeof(SDL_Texture*));
+    Vector_Resize(v->frames,1024);
+    v->dt=NULL;
+    return v;
+}
+
 SDL_Texture* Video_getFrame(Video* v){
     SDL_Texture* res=*((SDL_Texture**)Vector_Get(v->frames,v->pos));
     return res;
@@ -168,7 +180,6 @@ Video* Video_CopyShallow(Video* o){
     Vector_Resize(res->frames,Vector_Size(o->frames));
     for (int i=0;i<Vector_Size(o->frames);i++){
         SDL_Texture* t=*(SDL_Texture**)Vector_Get(o->frames,i);
-        emscripten_log(1,"Errors:%s",GetError());
         Vector_PushBack(res->frames,&t);
     }
     return res;

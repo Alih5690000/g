@@ -381,7 +381,10 @@ Vector* LoadPoses(const char* path){
     char buf[256];
     Vector_PushBack(res,&(Video*){NULL});
     snprintf(buf,256,"%s/Up",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});//check it's size
+    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
+    emscripten_log(1,"This's size %d and adress %p",Vector_Size(
+        (*(Video**)Vector_Get(res,DIR_UP))->frames
+    ),(*(Video**)Vector_Get(res,DIR_UP)));
     snprintf(buf,256,"%s/UpRight",path);
     Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
     snprintf(buf,256,"%s/Right",path);
@@ -504,7 +507,9 @@ void Sword_update(void* obj){
             if (*o->dir!=i)
                 Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
         }
-        Video_update(*(Video**)Vector_Get(o->attacks_pos,*o->dir));
+        Video* t=*(Video**)Vector_Get(o->attacks_pos,*o->dir);
+        emscripten_log(1,"adress %p",t);
+        Video_update(t);
         if (*o->moving){
             Video_update(o->legsAnim);
             Video_setPos(o->legsAnim2,0);
@@ -606,17 +611,30 @@ Vector* CopyVideosShallow(Vector* v){
     
     for (int i=0;i<Vector_Size(v);i++){
         Video** src=(Video**)Vector_Get(v,i);
-        if (!(*src)) continue;
+        if (!(*src)){
+            Vector_PushBack(res,*src);
+            continue;
+        };
         Video* t=Video_CopyShallow(*src);
+        if (i==DIR_UP){
+            emscripten_log(1,"Up size (before before) %d",Vector_Size(
+                (*src)->frames
+            ));
+        }
         Vector_PushBack(res,&t);
     }
-    
+    emscripten_log(1,"Up size (before) %d",Vector_Size(
+        (*(Video**)Vector_Get(res,DIR_UP))->frames
+    ));
     return res;
 }
 
 void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir){
     Sword* res=malloc(sizeof(Sword));
     res->attacks_pos=CopyVideosShallow(plr_animWithSwordAttacks);
+    emscripten_log(1,"Up size %d",Vector_Size(
+        (*(Video**)Vector_Get(res->attacks_pos,DIR_UP))->frames
+    ));
     res->lowPosAt=CreateArray(6,sizeof(int));
     Array_set(res->lowPosAt,&(int){0},&(int){0},
         &(int){0},&(int){1},&(int){1},&(int){1});
