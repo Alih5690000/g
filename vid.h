@@ -54,12 +54,15 @@ SDL_Texture* DeepCopyTextureEx(SDL_Renderer* renderer, SDL_Texture* src,
         h
     );
 
+    SDL_SetTextureBlendMode(dst, SDL_BLENDMODE_BLEND);
+
     if (!dst)
         return NULL;
 
     SDL_Texture* oldTarget = SDL_GetRenderTarget(renderer);
 
     SDL_SetRenderTarget(renderer, dst);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
     SDL_RenderClear(renderer);
     SDL_RenderCopyEx(renderer, src, NULL, NULL, angle, center, flip);
 

@@ -367,7 +367,7 @@ Video* CreateReversed(Video* o){
     res->dt=o->dt;
     res->frames=CreateVector(sizeof(SDL_Texture*));
     Vector_Resize(res->frames,Vector_Size(o->frames));
-    for (int i=Vector_Size(o->frames)-1;i>=0;i--){
+    for (int i=0;i<Vector_Size(o->frames);i++){
         SDL_Texture* t=*(SDL_Texture**)Vector_Get(o->frames,i);
         SDL_Texture* n=DeepCopyTextureEx(o->renderer,t,SDL_FLIP_HORIZONTAL,0,NULL);
         Vector_PushBack(res->frames,&n);
@@ -375,24 +375,21 @@ Video* CreateReversed(Video* o){
     return res;
 }
 
-Vector* LoadPoses(const char* path){
+Vector* LoadPoses(const char* path,int fps){
     Vector* res=CreateVector(sizeof(Video*));
     Vector_Resize(res,9);
     char buf[256];
     Vector_PushBack(res,&(Video*){NULL});
     snprintf(buf,256,"%s/Up",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
-    emscripten_log(1,"This's size %d and adress %p",Vector_Size(
-        (*(Video**)Vector_Get(res,DIR_UP))->frames
-    ),(*(Video**)Vector_Get(res,DIR_UP)));
+    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt)});
     snprintf(buf,256,"%s/UpRight",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
+    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt)});
     snprintf(buf,256,"%s/Right",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
+    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt)});
     snprintf(buf,256,"%s/DownRight",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
+    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt)});
     snprintf(buf,256,"%s/Down",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,6,&dt)});
+    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt)});
     
     Vector_PushBack(res,&(Video*){CreateReversed(
         *(Video**)Vector_Get(res,DIR_DOWN_RIGHT)
@@ -502,13 +499,11 @@ void Sword_update(void* obj){
         Video_setPos(o->MidAir,0);
         Video_setPos(o->Calm,0);
         Video_setPos(o->Idle,0);
-        emscripten_log(1,"Dir %d",*o->dir);
         for (int i=1;i<Vector_Size(o->attacks_pos);i++){
             if (*o->dir!=i)
                 Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
         }
         Video* t=*(Video**)Vector_Get(o->attacks_pos,*o->dir);
-        emscripten_log(1,"adress %p",t);
         Video_update(t);
         if (*o->moving){
             Video_update(o->legsAnim);
@@ -519,7 +514,7 @@ void Sword_update(void* obj){
                     NULL,&drawRect);
             else
                 SDL_RenderCopyExF(renderer,
-                    Video_getFrame(o->legsAnim2),
+                    Video_getFrame(o->legsAnim),
                     NULL,&drawRect,0,NULL,SDL_FLIP_HORIZONTAL);
         }
         else{
@@ -538,15 +533,11 @@ void Sword_update(void* obj){
                 }
             }
             Video* t=*(Video**)Vector_Get(o->attacks_pos,*o->dir);
-            emscripten_log(1,"size %d",Vector_Size(t->frames));
 
             int res=SDL_RenderCopyF(renderer,
                 Video_getFrame(t),
                 NULL,&drawRect);
             if (res){
-                emscripten_log(1,"Error:%s",SDL_GetError());
-                emscripten_log(1,"txt adress %p",
-                    t);
             }
         }
     }
@@ -572,9 +563,14 @@ void Sword_update(void* obj){
             Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
         }
         Video_update(o->Idle);
-        SDL_RenderCopyF(renderer,
-            Video_getFrame(o->Idle),
-            NULL,o->base.owner->rect);
+        if (o->lastX<ownerRect.x)
+            SDL_RenderCopyF(renderer,
+                Video_getFrame(o->Idle),
+                NULL,o->base.owner->rect);
+        else
+            SDL_RenderCopyExF(renderer,
+                Video_getFrame(o->Idle),
+                NULL,o->base.owner->rect,0,NULL,SDL_FLIP_HORIZONTAL);
     }
     else{
         Video_setPos(o->MidAir,0);
@@ -596,7 +592,7 @@ void Sword_update(void* obj){
             o->animOn=0;
         }
     }
-
+    o->lastX=ownerRect.x;
 }
 
 void Sword_asItem(void* obj,SDL_FPoint* point){
@@ -617,24 +613,15 @@ Vector* CopyVideosShallow(Vector* v){
         };
         Video* t=Video_CopyShallow(*src);
         if (i==DIR_UP){
-            emscripten_log(1,"Up size (before before) %d",Vector_Size(
-                (*src)->frames
-            ));
         }
         Vector_PushBack(res,&t);
     }
-    emscripten_log(1,"Up size (before) %d",Vector_Size(
-        (*(Video**)Vector_Get(res,DIR_UP))->frames
-    ));
     return res;
 }
 
 void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir){
     Sword* res=malloc(sizeof(Sword));
     res->attacks_pos=CopyVideosShallow(plr_animWithSwordAttacks);
-    emscripten_log(1,"Up size %d",Vector_Size(
-        (*(Video**)Vector_Get(res->attacks_pos,DIR_UP))->frames
-    ));
     res->lowPosAt=CreateArray(6,sizeof(int));
     Array_set(res->lowPosAt,&(int){0},&(int){0},
         &(int){0},&(int){1},&(int){1},&(int){1});
@@ -893,12 +880,41 @@ void init1(){
     }
 }
 
+int inFile;
+
+void Load(){
+    FILE* f=fopen("files/save.dat","r");
+    if (!f) return;
+    fread(&inFile,sizeof(int),1,f);
+    emscripten_log(1,"Loaded %d",inFile);
+    fclose(f);
+}
+
+void Save(){
+    FILE* f=fopen("files/save.dat","w");
+    if (!f) return;
+    inFile++;
+    fwrite(&inFile,sizeof(int),1,f);
+    fclose(f);
+}
+
 struct {
   Vector* walls;
   Vector* sprites;
 } Game2;
 
 int main(){
+
+    EM_ASM(
+        FS.mkdir("files/");
+        FS.mount(IDBFS, {}, "files");
+        FS.syncfs(true, function (err) {
+          assert(!err, "syncfs failed");
+          _Load();
+        });
+
+    );
+
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
     SDL_Init(SDL_INIT_EVERYTHING);
     IMG_Init(IMG_INIT_PNG);
@@ -920,7 +936,7 @@ int main(){
         "assets/plr_animWithSwordLegsWalking",renderer,6,&dt);
     plr_animWithSwordLegsStaying=Video_create(
         "assets/plr_animWithSwordLegsStaying",renderer,6,&dt);
-    plr_animWithSwordAttacks=LoadPoses("assets/plr_animWithSwordAttacks");
+    plr_animWithSwordAttacks=LoadPoses("assets/plr_animWithSwordAttacks",6);
     start=SDL_GetTicks();
     end=SDL_GetTicks();
 

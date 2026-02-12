@@ -4,6 +4,8 @@ emcc main.c \
   -s USE_SDL_IMAGE=2 \
   -s USE_SDL_TTF=2 \
   -s USE_SDL_MIXER=2 \
+  -s EXPORTED_FUNCTIONS='["_main","_Load","_Save"]' \
+  -lidbfs.js \
   -s SDL2_IMAGE_FORMATS='["png","jpg","jpeg","bmp"]' \
   -s SDL2_MIXER_FORMATS='["wav","ogg","mp3"]' \
   -s ALLOW_MEMORY_GROWTH=1 \
