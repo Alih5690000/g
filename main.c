@@ -33,6 +33,37 @@ void SDL_MoveF(SDL_FRect* r,
     r->y += dy * step;
 }
 
+
+int inFile;
+
+void Load(){
+    FILE* f=fopen("files/save.dat","r");
+    if (!f){
+        emscripten_log(1,"No save file found");
+        return;
+    }
+    fread(&inFile,sizeof(int),1,f);
+    emscripten_log(1,"Loaded %d",inFile);
+    fclose(f);
+}
+
+void Save(){
+    FILE* f=fopen("files/save.dat","w");
+    if (!f) return;
+    emscripten_log(1,"Saved");
+    inFile++;
+    fwrite(&inFile,sizeof(int),1,f);
+    fclose(f);
+    EM_ASM(
+        FS.syncfs(false,function(err){
+            if (err){
+                console.log("Error",err);
+            }
+        })
+    );
+}
+
+
 SDL_Texture* Wtexture;
 SDL_Renderer* renderer;
 SDL_Window* window;
@@ -716,6 +747,10 @@ void loop(void){
                 }
             }
         }
+        if (e.type==SDL_KEYDOWN){
+            if (e.key.keysym.sym==SDLK_1)
+                Save();
+        }
         if (e.type==SDL_MOUSEBUTTONDOWN){
             if (e.button.button==SDL_BUTTON_LEFT){
                 mx = e.button.x-300;
@@ -880,41 +915,12 @@ void init1(){
     }
 }
 
-int inFile;
-
-void Load(){
-    FILE* f=fopen("files/save.dat","r");
-    if (!f) return;
-    fread(&inFile,sizeof(int),1,f);
-    emscripten_log(1,"Loaded %d",inFile);
-    fclose(f);
-}
-
-void Save(){
-    FILE* f=fopen("files/save.dat","w");
-    if (!f) return;
-    inFile++;
-    fwrite(&inFile,sizeof(int),1,f);
-    fclose(f);
-}
-
 struct {
   Vector* walls;
   Vector* sprites;
 } Game2;
 
 int main(){
-
-    EM_ASM(
-        FS.mkdir("files/");
-        FS.mount(IDBFS, {}, "files");
-        FS.syncfs(true, function (err) {
-          assert(!err, "syncfs failed");
-          _Load();
-        });
-
-    );
-
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
     SDL_Init(SDL_INIT_EVERYTHING);
     IMG_Init(IMG_INIT_PNG);
@@ -939,6 +945,17 @@ int main(){
     plr_animWithSwordAttacks=LoadPoses("assets/plr_animWithSwordAttacks",6);
     start=SDL_GetTicks();
     end=SDL_GetTicks();
+
+    EM_ASM(
+        console.log("Entered load");
+        FS.mkdir("files");
+        FS.mount(IDBFS, {}, "files");
+        FS.syncfs(true, function (err) {
+          assert(!err, "syncfs failed");
+          _Load();
+        });
+
+    );
 
     init1();
 
