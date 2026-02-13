@@ -812,9 +812,9 @@ void loop(void){
       else
           plr_dir=DIR_DOWN;
     }
-    if (keys[SDL_SCANCODE_RIGHT])
+    if (keys[SDL_SCANCODE_RIGHT] && !keys[SDL_SCANCODE_UP] && !keys[SDL_SCANCODE_DOWN])
         plr_dir=DIR_RIGHT;
-    else if (keys[SDL_SCANCODE_LEFT])
+    else if (keys[SDL_SCANCODE_LEFT] && !keys[SDL_SCANCODE_UP] && !keys[SDL_SCANCODE_DOWN])
         plr_dir=DIR_LEFT;
 
     plr.x+=plr_dx;
