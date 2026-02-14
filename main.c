@@ -119,14 +119,14 @@ void BloodParticle_update(void* obj){
     o->dy-=gravity*dt*weight;
     o->base.rect->x+=o->dx;
     o->base.rect->y-=o->dy;
-    VECTOR_FOR(o->base.sprites,i,SDL_FRect){
-        if (!(*i) ->collidable) continue;
-        if (SDL_HasIntersectionF(o->base.rect,i)){
-            if (o->base.rect->y<=i->y){
-                o->base.rect->y=i->y-o->base.rect->h;
+    VECTOR_FOR(o->base.sprites,i,Sprite*){
+        if (!((*i) ->collidable)) continue;
+        if (SDL_HasIntersectionF(o->base.rect,(*i)->rect)){
+            if (o->base.rect->y<=(*i)->rect->y){
+                o->base.rect->y=(*i)->rect->y-o->base.rect->h;
             }
             else{
-                o->base.rect->y=i->y+i->h;
+                o->base.rect->y=(*i)->rect->y+(*i)->rect->h;
             }
             o->dy=0;
         }
@@ -141,7 +141,7 @@ void BloodParticle_destroy(void* obj){
     free(o);
 }
 
-BloodParticle* BloodParticle_create(float dy,float dx,SDL_FRect rect,Vector* sprites,Vector* collisions){
+BloodParticle* BloodParticle_create(float dy,float dx,SDL_FRect rect,Vector* sprites){
     BloodParticle* o=malloc(sizeof(BloodParticle));
     if (!o){
         return NULL;
@@ -168,7 +168,6 @@ BloodParticle* BloodParticle_create(float dy,float dx,SDL_FRect rect,Vector* spr
     }
     SDL_UnlockTexture(o->base.txt);
     o->base.sprites=sprites;
-    o->base.collisions=collisions;
     o->base.active=1;
     o->lifetime=3.f;
     o->base.destroy=BloodParticle_destroy;
@@ -248,35 +247,35 @@ void Enemy_update(void* obj){
             Vector_PushBack(o->base.sprites,&a);
             BloodParticle* tmp=BloodParticle_create(5.f,50.f,
                 (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
-                o->base.sprites,o->base.collisions);
+                o->base.sprites);
             Vector_PushBack(o->base.sprites,&tmp);
             tmp=BloodParticle_create(5.f,25.f,
                 (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
-                o->base.sprites,o->base.collisions);
+                o->base.sprites);
             Vector_PushBack(o->base.sprites,&tmp);
             tmp=BloodParticle_create(5.f,10.f,
                 (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
-                o->base.sprites,o->base.collisions);
+                o->base.sprites);
             Vector_PushBack(o->base.sprites,&tmp);
             tmp=BloodParticle_create(5.f,-25.f,
                 (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
-                o->base.sprites,o->base.collisions);
+                o->base.sprites);
             Vector_PushBack(o->base.sprites,&tmp);
             tmp=BloodParticle_create(5.f,-10.f,
                 (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
-                o->base.sprites,o->base.collisions);
+                o->base.sprites);
             Vector_PushBack(o->base.sprites,&tmp);
             tmp=BloodParticle_create(5.f,-50.f,
                 (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
-                o->base.sprites,o->base.collisions);
+                o->base.sprites);
             Vector_PushBack(o->base.sprites,&tmp);
             tmp=BloodParticle_create(5.f,-20.f,
                 (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
-                o->base.sprites,o->base.collisions);
+                o->base.sprites);
             Vector_PushBack(o->base.sprites,&tmp);
             tmp=BloodParticle_create(5.f,20.f,
                 (SDL_FRect){o->base.rect->x,o->base.rect->y,10.f,10.f},
-                o->base.sprites,o->base.collisions);
+                o->base.sprites);
             Vector_PushBack(o->base.sprites,&tmp);
             VECTOR_FOR(o->base.sprites,i,Sprite*){
                 Sprite* s=*i;
@@ -288,10 +287,11 @@ void Enemy_update(void* obj){
         if (fabs(o->base.rect->x-o->target->x)<o->speed*dt){
             o->base.rect->x=o->target->x;
         }
-        VECTOR_FOR(o->base.collisions,i,SDL_FRect){
-            if (!(*i) ->collidable) continue;
-            if (SDL_HasIntersectionF(o->base.rect,i))
-                o->base.rect->x=i->x-o->base.rect->w;
+        VECTOR_FOR(o->base.sprites,i,Sprite*){
+            if (!((*i)->collidable)) continue;
+            if (SDL_HasIntersectionF(o->base.rect,(*i)->rect)){
+                o->base.rect->x=(*i)->rect->x-o->base.rect->w;
+            }
         }
     }
     else if(o->target->x<o->base.rect->x){
@@ -299,10 +299,11 @@ void Enemy_update(void* obj){
         if (fabs(o->base.rect->x-o->target->x)<o->speed*dt){
             o->base.rect->x=o->target->x;
         }
-        VECTOR_FOR(o->base.sprites,i,SDL_FRect){
-        if (!(*i) ->collidable) continue;
-        if (SDL_HasIntersectionF( o->base.rect,i))
-            o->base.rect->x=i->x+i->w;
+        VECTOR_FOR(o->base.sprites,i,Sprite*){
+            if (!((*i)->collidable)) continue;
+            if (SDL_HasIntersectionF(o->base.rect,(*i)->rect)){
+                o->base.rect->x=(*i)->rect->x+(*i)->rect->w;
+            }
         }
     }
 
@@ -311,14 +312,15 @@ void Enemy_update(void* obj){
     o->dy=SDL_min(o->dy,0);
     o->base.rect->y-=o->dy;
 
-    VECTOR_FOR(o->base.collisions,i,SDL_FRect){
-        if (SDL_HasIntersectionF(o->base.rect,i)){
-            if (o->base.rect->y<=i->y){
-                o->base.rect->y=i->y-o->base.rect->h;
+    VECTOR_FOR(o->base.sprites,i,Sprite*){
+        if (!((*i)->collidable)) continue;
+        if (SDL_HasIntersectionF(o->base.rect,( *i)->rect)){
+            if (o->base.rect->y<=(*i)->rect->y){
+                o->base.rect->y=(*i)->rect->y-o->base.rect->h;
                 o->inAir=0;
             }
             else{
-                o->base.rect->y=i->y+i->h;
+                o->base.rect->y=(*i)->rect->y+(*i)->rect->h;
             }
             o->dy=0;
         }
@@ -341,7 +343,7 @@ void Enemy_destroy(void* obj){
     free(o);
 }
 
-Enemy* Enemy_create(SDL_FRect* target,SDL_FRect rect,Vector* collisions,Vector* sprites,int* hp){
+Enemy* Enemy_create(SDL_FRect* target,SDL_FRect rect,Vector* sprites,int* hp){
     Enemy* o=malloc(sizeof(Enemy));
     SDL_FRect* nrect=malloc(sizeof(SDL_FRect));
     *nrect=rect;
@@ -351,7 +353,6 @@ Enemy* Enemy_create(SDL_FRect* target,SDL_FRect rect,Vector* collisions,Vector* 
     o->base.hp=50;
     o->base.active=1;
     o->base.collidable=0;
-    o->base.collisions=collisions;
     o->base.sprites=sprites;
     o->target=target;
     o->cd=0.f;
@@ -377,33 +378,37 @@ Enemy* Enemy_create(SDL_FRect* target,SDL_FRect rect,Vector* collisions,Vector* 
 }
 
 typedef struct Wall{
-  Sprite base;
+    Sprite base;
 } Wall;
 
 void Wall_update(void* obj) {
-  Wall* o=(Wall*)obj;
-  SDL_RenderCopy(renderer,o->base.txt,NULL,o->base.rect);
+    emscripten_log(1,"Wall update");
+    Wall* o=(Wall*)obj;
+    SDL_RenderCopyF(renderer,o->base.txt,NULL,o->base.rect);
+    emscripten_log(1,"Wall update done");
 } 
 
 void Wall_destroy(void* obj) {
-  Wall* o=(Wall*)obj;
-  SDL_DestroyTexture(o->base.txt);
-  free(o->base.rect);
-  free(o);
+    Wall* o=(Wall*)obj;
+    SDL_DestroyTexture(o->base.txt);
+    free(o->base.rect);
+    free(o);
 } 
 
-void Wall_create(SDL_FRect rect) {
-  Wall* o=malloc(sizeof(Wall)) ;
-  o->base.update=Wall_update;
-  o->base.destroy=Wall_destroy;
-  o->base.collidable=1;
-  {
-    SDL_FRect tmp=malloc(sizeof(SDL_FRect)) ;
-    *tmp=rect;
-    o->base.rect=tmp;
-  } 
-  o->base.txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
-        SDL_TEXTUREACCESS_STREAMING,75,10);
+void* Wall_create(SDL_FRect rect) {
+    Wall* o=malloc(sizeof(Wall)) ;
+    o->base.update=Wall_update;
+    o->base.destroy=Wall_destroy;
+    o->base.collidable=1;
+    o->base.active=1;
+    o->base.hp=0;
+    {
+        SDL_FRect* tmp=malloc(sizeof(SDL_FRect)) ;
+        *tmp=rect;
+        o->base.rect=tmp;
+    } 
+    o->base.txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_STREAMING,(int)o->base.rect->w,(int)o->base.rect->h);
     void* pixels;
     int pitch;
     SDL_LockTexture(o->base.txt,NULL,&pixels,&pitch);
@@ -414,7 +419,8 @@ void Wall_create(SDL_FRect rect) {
         }
     }
     SDL_UnlockTexture(o->base.txt);
-} 
+    return o;
+}
 
 #define DIR_NONE 0
 #define DIR_UP 1
@@ -766,7 +772,7 @@ void GameOver(void){
 }
 
 void loop(void){
-    
+    emscripten_log(1,"Loop started");
 
     HandleDelta();
 
@@ -864,15 +870,17 @@ void loop(void){
 
     plr.x+=plr_dx;
 
-    VECTOR_FOR(sprites,i,SDL_FRect){
-        if (!(*i)->collidable) continue;
-        if (SDL_HasIntersectionF(&plr,i)){
+    emscripten_log(1,"Before checking collisions");
+    VECTOR_FOR(sprites,i,Sprite*){
+        if (!((*i)->collidable)) continue;
+        if (SDL_HasIntersectionF(&plr,(*i)->rect)){
             if (plr_dx>0)
-                plr.x=i->x-plr.w;
+                plr.x=(*i)->rect->x-plr.w;
             else
-                plr.x=i->x+i->w;
+                plr.x=(*i)->rect->x+(*i)->rect->w;
         }
     }
+    emscripten_log(1,"After checking collisions");
 
     plr_inAir=1;
 
@@ -880,40 +888,39 @@ void loop(void){
 
     plr.y-=plr_dy;
 
-    VECTOR_FOR(sprites,i,SDL_FRect){
-        if (!(*i) ->collidable) continue;
-        if (SDL_HasIntersectionF(&plr,i)){
-            if (plr.y<=i->y){
-                plr.y=i->y-plr.h;
+    emscripten_log(1,"Before checking collisions (y)");
+    VECTOR_FOR(sprites,i,Sprite*){
+        if (!((*i)->collidable)) continue;
+        if (SDL_HasIntersectionF(&plr,(*i)->rect)){
+            if (plr.y<=(*i)->rect->y){
+                plr.y=(*i)->rect->y-plr.h;
                 plr_inAir=0;
             }
             else{
-                plr.y=i->y+i->h;
+                plr.y=(*i)->rect->y+(*i)->rect->h;
             }
             plr_dy=0;
 
         }
     }
+    emscripten_log(1,"After checking collisions (y)");
 
     SDL_SetRenderTarget(renderer,Wtexture);
 
     {
         SDL_SetRenderDrawColor(renderer,100,100,100,255);
         SDL_RenderClear(renderer);
-        SDL_SetRenderDrawColor(renderer,255,255,255,255);
-        SDL_SetRenderDrawColor(renderer,150,150,150,255);
-        VECTOR_FOR(walls,i,SDL_FRect){
-            SDL_RenderFillRectF(renderer,i);
-        }
-
+        emscripten_log(1,"Before updating sprites");
         for (int i=0;i<Vector_Size(sprites);i++){
             Sprite* o=*(Sprite**)Vector_Get(sprites,i);
             if (o->update && o){
                 o->update(o);
             }
         }
+        emscripten_log(1,"After updating sprites");
 
         int j=0;
+        emscripten_log(1,"Before destroying sprites");
         for (int i = Vector_Size(sprites) - 1; i >= 0; --i){
             Sprite* s = *(Sprite**)Vector_Get(sprites, i);
             if (!s->active && (s && s->destroy)){
@@ -921,6 +928,7 @@ void loop(void){
                 Vector_erase(sprites,i);
             }
         }
+        emscripten_log(1,"After destroying sprites");
         
         plr_wep->update((void*)plr_wep);
         if (plr_hp<=0) GameOver();
@@ -942,19 +950,18 @@ void loop(void){
 void init1(){    
     lastHp=plr_hp;
     plr_wep=Sword_create(&plr_sprite,&plr_walking,&plr_inAir,&plr_dir);
-    walls=CreateVector(sizeof(SDL_FRect));
     sprites=CreateVector(sizeof(Sprite*));
     Vector_Resize(sprites,1024);
     {
-        Vector_PushBack(sprites,Wall_create((SDL_FRect){0.f,700.f,1000.f,100.f})) ;
-        Vector_PushBack(walls,Wall_create((SDL_FRect){400.f,600.f,100.f,25.f})) ;
+        Vector_PushBack(sprites,&(Sprite*){Wall_create((SDL_FRect){0.f,700.f,1000.f,100.f})});
+        Vector_PushBack(sprites,&(Sprite*){Wall_create((SDL_FRect){400.f,600.f,100.f,25.f})});
     }
     {
         Sprite* tmp=(Sprite*)Enemy_create(&plr,(SDL_FRect){100,300,100,100}
-            ,walls,sprites,&plr_hp);
+            ,sprites,&plr_hp);
         Vector_PushBack(sprites,&tmp);
         tmp=(Sprite*)Enemy_create(&plr,(SDL_FRect){900,300,100,100}
-            ,walls,sprites,&plr_hp);
+            ,sprites,&plr_hp);
         Vector_PushBack(sprites,&tmp);
     }
     VECTOR_FOR(sprites,i,Sprite*){
