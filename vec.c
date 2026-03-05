@@ -123,6 +123,18 @@ array* Array_copy(array* o){
     return n;
 }
 
+array* CreateArrayWithElements(int size,int ellsize,...){
+    array* res=CreateArray(size,ellsize);
+    va_list args;
+    va_start(args,ellsize);
+    for (int i=0;i<size;i++){
+        void* data=va_arg(args,void*);
+        memcpy(((char*)(res->__data))+(res->__ellsize*i),data,res->__ellsize);
+    }
+    va_end(args);
+    return res;
+}
+
 typedef struct Vector{
     void* __data;
     int __size;

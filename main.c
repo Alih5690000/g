@@ -498,7 +498,6 @@ typedef struct Sword{
     int* midAir;
     int lastLoops;
     float lastX;
-    array* lowPosAt;
     array* offsets;
     Vector* attacks_pos;
     Video* legsAnim;
@@ -609,12 +608,7 @@ void Sword_update(void* obj){
                 NULL,&drawRect);
         }
         if (*o->dir!=0){
-            for (int i=0;i<Array_size(o->lowPosAt);i++){
-                if (Video_getPos(o->legsAnim2)==*(int*)Array_get(o->lowPosAt,i)){
-                    drawRect.y-=*(int*)Array_get(o->offsets,i);
-                    break;
-                }
-            }
+            drawRect.y-=*(int*)Array_get(o->offsets,Video_getPos(o->legsAnim2));
             Video* t=*(Video**)Vector_Get(o->attacks_pos,*o->dir);
 
             int res=SDL_RenderCopyF(renderer,
@@ -702,15 +696,10 @@ Vector* CopyVideosShallow(Vector* v){
     return res;
 }
 
-void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir){
+void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir,array* offsets){
     Sword* res=malloc(sizeof(Sword));
     res->attacks_pos=CopyVideosShallow(plr_animWithSwordAttacks);
-    res->lowPosAt=CreateArray(6,sizeof(int));
-    Array_set(res->lowPosAt,&(int){0},&(int){0},
-        &(int){0},&(int){1},&(int){1},&(int){1});
-    res->offsets=CreateArray(6,sizeof(int));
-    Array_set(res->offsets,&(int){0},&(int){0},
-        &(int){0},&(int){-1},&(int){-1},&(int){-1});
+    res->offsets=offsets;
     res->dir=dir;
     res->moving=moving;
     res->lastX=owner->rect->x;
@@ -766,6 +755,9 @@ int mx,my;
 int pressed=0;
 int plr_walking=0;
 int plr_dir=DIR_NONE;
+SDL_bool mouseInWindow=SDL_TRUE;
+
+SDL_FRect mouseRect={0,0,10,10};
 
 void GameOver(void){
     quit();
@@ -799,16 +791,17 @@ void loop(void){
             }
         }
         if (e.type==SDL_KEYDOWN){
+            if (e.key.keysym.sym==SDLK_l)
+                SDL_SetRelativeMouseMode(mouseInWindow);
+                mouseInWindow=!mouseInWindow;
+        }
+        if (e.type==SDL_KEYDOWN){
             if (e.key.keysym.sym==SDLK_1)
                 Save();
         }
-        if (e.type==SDL_MOUSEBUTTONDOWN){
-            if (e.button.button==SDL_BUTTON_LEFT){
-                mx = e.button.x-300;
-                my = e.button.y;
-
-                pressed = 1;
-            }
+        if (e.type==SDL_MOUSEMOTION){
+            mouseRect.x+=e.motion.xrel;
+            mouseRect.y+=e.motion.yrel;
         }
     }
 
@@ -917,6 +910,8 @@ void loop(void){
                 o->update(o);
             }
         }
+        SDL_SetRenderDrawColor(renderer,255,255,255,255);
+        SDL_RenderFillRectF(renderer,&mouseRect);
         emscripten_log(1,"After updating sprites");
 
         int j=0;
@@ -949,7 +944,9 @@ void loop(void){
 
 void init1(){    
     lastHp=plr_hp;
-    plr_wep=Sword_create(&plr_sprite,&plr_walking,&plr_inAir,&plr_dir);
+    plr_wep=Sword_create(&plr_sprite,&plr_walking,&plr_inAir,&plr_dir,
+    CreateArrayWithElements(6,sizeof(int),&(int){0},&(int){0},
+        &(int){-3},&(int){-3},&(int){-3},&(int){-3}));
     sprites=CreateVector(sizeof(Sprite*));
     Vector_Resize(sprites,1024);
     {
@@ -1010,6 +1007,8 @@ int main(){
         });
 
     );
+
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     init1();
 
