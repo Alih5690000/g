@@ -33,6 +33,7 @@ void SDL_MoveF(SDL_FRect* r,
     r->y += dy * step;
 }
 
+SDL_FRect mouseRect={0,0,10,10};
 
 int inFile;
 
@@ -76,6 +77,8 @@ Video* plr_animWithSwordMidAir;
 Video* plr_animWithSwordLegsWalking;
 Video* plr_animWithSwordLegsStaying;
 Vector* plr_animWithSwordAttacks;
+SDL_Texture* BulletTexture;
+
 void(*lastloop) () ;
 void(*currloop) () ;
 void switch_loop(void(*to) ()) {
@@ -382,10 +385,8 @@ typedef struct Wall{
 } Wall;
 
 void Wall_update(void* obj) {
-    emscripten_log(1,"Wall update");
     Wall* o=(Wall*)obj;
     SDL_RenderCopyF(renderer,o->base.txt,NULL,o->base.rect);
-    emscripten_log(1,"Wall update done");
 } 
 
 void Wall_destroy(void* obj) {
@@ -434,6 +435,10 @@ void* Wall_create(SDL_FRect rect) {
 
 typedef struct Weapon{
     Sprite* owner;
+    int* moving;
+    int* midAir;
+    int* dir;
+    float lastX;
     void(*update)(void*);
     void(*onFire)(void*,Vector*);
     void(*asItem)(void*,SDL_FPoint*);
@@ -488,24 +493,24 @@ Vector* LoadPoses(const char* path,int fps){
     return res;
 }
 
+typedef struct Anims{
+    Video* legsAnim;
+    Video* legsAnim2;
+    Video* Idle;
+    Video* Calm;
+    Video* MidAir;
+    Vector* attacks_pos;
+} Anims;
+
 typedef struct Sword{
     Weapon base;
     float timeAttacking;
     int damage;
     int animOn;
     float cd;
-    int* moving;
-    int* midAir;
     int lastLoops;
-    float lastX;
     array* offsets;
-    Vector* attacks_pos;
-    Video* legsAnim;
-    Video* legsAnim2;
-    Video* Idle;
-    Video* Calm;
-    Video* MidAir;
-    int* dir;
+    Anims anims;
     SDL_Texture* txt;
 } Sword;
 
@@ -521,7 +526,7 @@ void Sword_onFire(void* obj,Vector* ens){
     if (o->animOn) return;
     SDL_FRect ownerRect=*(o->base.owner->rect);
     SDL_FRect dmgRect={ownerRect.x+ownerRect.w/2,ownerRect.y+ownerRect.h/2,ownerRect.w,ownerRect.h};
-    switch (*o->dir){
+    switch (*o->base.dir){
         case DIR_UP:
           dmgRect=(SDL_FRect){ownerRect.x,ownerRect.y+20,ownerRect.w,20};
           break;
@@ -565,8 +570,8 @@ void Sword_onFire(void* obj,Vector* ens){
 void Sword_update(void* obj){
     if (!obj) return;
     Sword* o=(Sword*)obj;
-    for (int i=0;i<Vector_Size(o->attacks_pos);i++){
-        Video** vv = Vector_Get(o->attacks_pos,i);
+    for (int i=0;i<Vector_Size(o->anims.attacks_pos);i++){
+        Video** vv = Vector_Get(o->anims.attacks_pos,i);
     }
 
     o->base.owner->rect->x=floorf(o->base.owner->rect->x);
@@ -577,39 +582,39 @@ void Sword_update(void* obj){
     SDL_FRect ownerRect=*(o->base.owner->rect);
     SDL_FRect drawRect=ownerRect;
 
-    if (o->animOn && *o->dir!=0){
-        Video_setPos(o->MidAir,0);
-        Video_setPos(o->Calm,0);
-        Video_setPos(o->Idle,0);
-        for (int i=1;i<Vector_Size(o->attacks_pos);i++){
-            if (*o->dir!=i)
-                Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
+    if (o->animOn && *o->base.dir!=0){
+        Video_setPos(o->anims.MidAir,0);
+        Video_setPos(o->anims.Calm,0);
+        Video_setPos(o->anims.Idle,0);
+        for (int i=1;i<Vector_Size(o->anims.attacks_pos);i++){
+            if (*o->base.dir!=i)
+                Video_setPos(*(Video**)Vector_Get(o->anims.attacks_pos,i),0);
         }
-        Video* t=*(Video**)Vector_Get(o->attacks_pos,*o->dir);
+        Video* t=*(Video**)Vector_Get(o->anims.attacks_pos,*o->base.dir);
         Video_update(t);
-        if (*o->moving){
-            Video_update(o->legsAnim);
-            Video_setPos(o->legsAnim2,0);
-            if (o->lastX<ownerRect.x)
+        if (*o->base.moving){
+            Video_update(o->anims.legsAnim);
+            Video_setPos(o->anims.legsAnim2,0);
+            if (o->base.lastX<ownerRect.x)
                 SDL_RenderCopyF(renderer,
-                    Video_getFrame(o->legsAnim),
+                    Video_getFrame(o->anims.legsAnim),
                     NULL,&drawRect);
             else
                 SDL_RenderCopyExF(renderer,
-                    Video_getFrame(o->legsAnim),
+                    Video_getFrame(o->anims.legsAnim),
                     NULL,&drawRect,0,NULL,SDL_FLIP_HORIZONTAL);
         }
         else{
-            Video_update(o->legsAnim2);
+            Video_update(o->anims.legsAnim2);
             
-            Video_setPos(o->legsAnim,0);
+            Video_setPos(o->anims.legsAnim,0);
             SDL_RenderCopyF(renderer,
-                Video_getFrame(o->legsAnim2),
+                Video_getFrame(o->anims.legsAnim2),
                 NULL,&drawRect);
         }
-        if (*o->dir!=0){
-            drawRect.y-=*(int*)Array_get(o->offsets,Video_getPos(o->legsAnim2));
-            Video* t=*(Video**)Vector_Get(o->attacks_pos,*o->dir);
+        if (*o->base.dir!=0){
+            drawRect.y-=*(int*)Array_get(o->offsets,Video_getPos(o->anims.legsAnim2));
+            Video* t=*(Video**)Vector_Get(o->anims.attacks_pos,*o->base.dir);
 
             int res=SDL_RenderCopyF(renderer,
                 Video_getFrame(t),
@@ -618,48 +623,48 @@ void Sword_update(void* obj){
             }
         }
     }
-    else if (*o->midAir){
-        Video_setPos(o->Calm,0);
-        Video_setPos(o->Idle,0);
-        Video_setPos(o->legsAnim,0);
-        Video_setPos(o->legsAnim2,0);
-        for (int i=1;i<Vector_Size(o->attacks_pos);i++){
-            Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
+    else if (*o->base.midAir){
+        Video_setPos(o->anims.Calm,0);
+        Video_setPos(o->anims.Idle,0);
+        Video_setPos(o->anims.legsAnim,0);
+        Video_setPos(o->anims.legsAnim2,0);
+        for (int i=1;i<Vector_Size(o->anims.attacks_pos);i++){
+            Video_setPos(*(Video**)Vector_Get(o->anims.attacks_pos,i),0);
         }
-        Video_update(o->MidAir);
+        Video_update(o->anims.MidAir);
         SDL_RenderCopyF(renderer,
-            Video_getFrame(o->MidAir),
+            Video_getFrame(o->anims.MidAir),
             NULL,o->base.owner->rect);
     }
-    else if (*o->moving){
-        Video_setPos(o->Calm,0);
-        Video_setPos(o->MidAir,0);
-        Video_setPos(o->legsAnim,0);
-        Video_setPos(o->legsAnim2,0);
-        for (int i=1;i<Vector_Size(o->attacks_pos);i++){
-            Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
+    else if (*o->base.moving){
+        Video_setPos(o->anims.Calm,0);
+        Video_setPos(o->anims.MidAir,0);
+        Video_setPos(o->anims.legsAnim,0);
+        Video_setPos(o->anims.legsAnim2,0);
+        for (int i=1;i<Vector_Size(o->anims.attacks_pos);i++){
+            Video_setPos(*(Video**)Vector_Get(o->anims.attacks_pos,i),0);
         }
-        Video_update(o->Idle);
-        if (o->lastX<ownerRect.x)
+        Video_update(o->anims.Idle);
+        if (o->base.lastX<ownerRect.x)
             SDL_RenderCopyF(renderer,
-                Video_getFrame(o->Idle),
+                Video_getFrame(o->anims.Idle),
                 NULL,o->base.owner->rect);
         else
             SDL_RenderCopyExF(renderer,
-                Video_getFrame(o->Idle),
+                Video_getFrame(o->anims.Idle),
                 NULL,o->base.owner->rect,0,NULL,SDL_FLIP_HORIZONTAL);
     }
     else{
-        Video_setPos(o->MidAir,0);
-        Video_setPos(o->legsAnim,0);
-        Video_setPos(o->legsAnim2,0);
-        Video_setPos(o->Idle,0);
-        for (int i=1;i<Vector_Size(o->attacks_pos);i++){
-            Video_setPos(*(Video**)Vector_Get(o->attacks_pos,i),0);
+        Video_setPos(o->anims.MidAir,0);
+        Video_setPos(o->anims.legsAnim,0);
+        Video_setPos(o->anims.legsAnim2,0);
+        Video_setPos(o->anims.Idle,0);
+        for (int i=1;i<Vector_Size(o->anims.attacks_pos);i++){
+            Video_setPos(*(Video**)Vector_Get(o->anims.attacks_pos,i),0);
         }
-        Video_update(o->Calm);
+        Video_update(o->anims.Calm);
         SDL_RenderCopyF(renderer,
-            Video_getFrame(o->Calm),
+            Video_getFrame(o->anims.Calm),
             NULL,o->base.owner->rect);
     }
     if (o->animOn){
@@ -669,7 +674,7 @@ void Sword_update(void* obj){
             o->animOn=0;
         }
     }
-    o->lastX=ownerRect.x;
+    o->base.lastX=ownerRect.x;
 }
 
 void Sword_asItem(void* obj,SDL_FPoint* point){
@@ -696,14 +701,16 @@ Vector* CopyVideosShallow(Vector* v){
     return res;
 }
 
-void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir,array* offsets){
+
+
+void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir,array* offsets,Anims anims){
     Sword* res=malloc(sizeof(Sword));
-    res->attacks_pos=CopyVideosShallow(plr_animWithSwordAttacks);
+    res->anims=anims;
     res->offsets=offsets;
-    res->dir=dir;
-    res->moving=moving;
-    res->lastX=owner->rect->x;
-    res->midAir=midAir;
+    res->base.dir=dir;
+    res->base.moving=moving;
+    res->base.lastX=owner->rect->x;
+    res->base.midAir=midAir;
     res->timeAttacking=0.f;
     res->animOn=0;
     res->damage=10;
@@ -713,17 +720,244 @@ void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir,array* offsets
     void* pixels;
     int pitch;
     res->cd=0.f;
-    res->legsAnim=Video_CopyShallow(plr_animWithSwordLegsWalking);
-    res->legsAnim2=Video_CopyShallow(plr_animWithSwordLegsStaying);
-    res->Idle=Video_CopyShallow(plr_animWithSwordIdle);
-    res->Calm=Video_CopyShallow(plr_animWithSwordCalm);
-    res->MidAir=Video_CopyShallow(plr_animWithSwordMidAir);
     res->base.owner=owner;
     res->base.asItem=Sword_asItem;
     res->base.destroy=Sword_destroy;
     res->base.onFire=Sword_onFire;
     res->base.update=Sword_update;
     return res;
+}
+
+typedef struct Bullet{
+    Sprite base;
+    float speed;
+    int dmg;
+    float targetx,targety;
+} Bullet;
+
+void Bullet_update(void* obj){
+    emscripten_log(1,"Bullet update");
+    Bullet* o=(Bullet*)obj;
+    SDL_MoveF(o->base.rect,o->targetx,o->targety,o->speed,dt);
+    for (int i=0;i<Vector_Size(o->base.sprites);i++){
+        Sprite* s=*(Sprite**)Vector_Get(o->base.sprites,i);
+        if (s==&o->base || !s->active) continue;
+        if (SDL_HasIntersectionF(o->base.rect,s->rect)){
+            if (s->collidable){
+                o->base.active=0;
+                return;
+            }
+            if (s->hp>0){
+                s->hp-=o->dmg;
+            }
+            o->base.active=0;
+            return;
+        }
+    }
+    SDL_RenderCopyF(renderer,o->base.txt,NULL,o->base.rect);
+}
+
+void Bullet_destroy(void* obj){
+    Bullet* o=(Bullet*)obj;
+    free(o->base.rect);
+    free(o);
+}
+
+Bullet* Bullet_create(float x,float y,float targetx,float targety
+    ,float speed,int dmg,Vector* sprites){
+    Bullet* o=malloc(sizeof(Bullet));
+    o->base.rect=malloc(sizeof(SDL_FRect));
+    o->base.sprites=sprites;
+    o->base.rect->x=x;
+    o->base.rect->y=y;
+    o->base.rect->w=10;
+    o->base.rect->h=10;
+    o->targetx=targetx;
+    o->targety=targety;
+    o->speed=speed;
+    o->dmg=dmg;
+    o->base.txt=BulletTexture;
+    o->base.update=Bullet_update;
+    o->base.destroy=Bullet_destroy;
+    o->base.collidable=0;
+    o->base.active=1;
+    o->base.hp=-1;
+    return o;
+}
+
+typedef struct Gun{
+    Weapon base;
+    int magSize;
+    int bulletsInMag;
+    int animOn;
+    int mags;
+    float timeAttacking;
+    Anims anims;
+    array* offsets;
+    float cd;
+} Gun;
+
+void Gun_destroy(void* obj){
+    Gun* o=(Gun*)obj;
+    free(o);
+}
+
+void Gun_onFire(void* obj,Vector* sprites){
+    emscripten_log(1,"Gun onFire");
+    Gun* o=(Gun*)obj;
+    if(o->base.owner->hp<=0 || o->cd>0.f) return;
+    if (o->bulletsInMag<=0){
+        if (o->mags<=0) return;
+        o->cd=1.f;
+        o->mags--;
+        o->bulletsInMag=o->magSize;
+    }
+    o->animOn=1;
+    o->timeAttacking=0.5f;
+    o->bulletsInMag--;
+    SDL_FRect* ownerRect=o->base.owner->rect;
+    float targetx=ownerRect->x+ownerRect->w/2;
+    float targety=ownerRect->y+ownerRect->h/2;
+    float mx=mouseRect.x,my=mouseRect.y;
+    Vector_PushBack(sprites,&(Bullet*){Bullet_create(ownerRect->x+ownerRect->w/2,
+        ownerRect->y+ownerRect->h/2,mx,my,500.f,10,sprites)});
+}
+
+void Gun_update(void* obj){
+    Gun* o=(Gun*)obj;
+    if (o->cd>0.f){
+        o->cd-=dt;
+        if (o->cd<0.f) o->cd=0.f;
+    }
+    if (o->timeAttacking<=0){
+        o->animOn=0;
+    }
+    o->base.owner->rect->x=floorf(o->base.owner->rect->x);
+    o->base.owner->rect->y=floorf(o->base.owner->rect->y);
+    o->base.owner->rect->w=floorf(o->base.owner->rect->w);
+    o->base.owner->rect->h=floorf(o->base.owner->rect->h);
+
+    SDL_FRect ownerRect=*(o->base.owner->rect);
+    SDL_FRect drawRect=ownerRect;
+
+    emscripten_log(1,"Gun update start");
+
+    if (o->animOn && *o->base.dir!=0){
+        Video_setPos(o->anims.MidAir,0);
+        Video_setPos(o->anims.Calm,0);
+        Video_setPos(o->anims.Idle,0);
+        for (int i=1;i<Vector_Size(o->anims.attacks_pos);i++){
+            if (*o->base.dir!=i)
+                Video_setPos(*(Video**)Vector_Get(o->anims.attacks_pos,i),0);
+        }
+        Video* t=*(Video**)Vector_Get(o->anims.attacks_pos,*o->base.dir);
+        Video_update(t);
+        if (*o->base.moving){
+            Video_update(o->anims.legsAnim);
+            Video_setPos(o->anims.legsAnim2,0);
+            if (o->base.lastX<ownerRect.x)
+                SDL_RenderCopyF(renderer,
+                    Video_getFrame(o->anims.legsAnim),
+                    NULL,&drawRect);
+            else
+                SDL_RenderCopyExF(renderer,
+                    Video_getFrame(o->anims.legsAnim),
+                    NULL,&drawRect,0,NULL,SDL_FLIP_HORIZONTAL);
+        }
+        else{
+            Video_update(o->anims.legsAnim2);
+            
+            Video_setPos(o->anims.legsAnim,0);
+            SDL_RenderCopyF(renderer,
+                Video_getFrame(o->anims.legsAnim2),
+                NULL,&drawRect);
+        }
+        if (*o->base.dir!=0){
+            drawRect.y-=*(int*)Array_get(o->offsets,Video_getPos(o->anims.legsAnim2));
+            Video* t=*(Video**)Vector_Get(o->anims.attacks_pos,*o->base.dir);
+
+            int res=SDL_RenderCopyF(renderer,
+                Video_getFrame(t),
+                NULL,&drawRect);
+            if (res){
+            }
+        }
+    }
+    else if (*o->base.midAir){
+        emscripten_log(1,"MidAir animation");
+        Video_setPos(o->anims.Calm,0);
+        Video_setPos(o->anims.Idle,0);
+        Video_setPos(o->anims.legsAnim,0);
+        Video_setPos(o->anims.legsAnim2,0);
+        for (int i=1;i<Vector_Size(o->anims.attacks_pos);i++){
+            Video_setPos(*(Video**)Vector_Get(o->anims.attacks_pos,i),0);
+        }
+        Video_update(o->anims.MidAir);
+        SDL_RenderCopyF(renderer,
+            Video_getFrame(o->anims.MidAir),
+            NULL,o->base.owner->rect);
+    }
+    else if (*o->base.moving){
+        Video_setPos(o->anims.Calm,0);
+        Video_setPos(o->anims.MidAir,0);
+        Video_setPos(o->anims.legsAnim,0);
+        Video_setPos(o->anims.legsAnim2,0);
+        for (int i=1;i<Vector_Size(o->anims.attacks_pos);i++){
+            Video_setPos(*(Video**)Vector_Get(o->anims.attacks_pos,i),0);
+        }
+        Video_update(o->anims.Idle);
+        if (o->base.lastX<ownerRect.x)
+            SDL_RenderCopyF(renderer,
+                Video_getFrame(o->anims.Idle),
+                NULL,o->base.owner->rect);
+        else
+            SDL_RenderCopyExF(renderer,
+                Video_getFrame(o->anims.Idle),
+                NULL,o->base.owner->rect,0,NULL,SDL_FLIP_HORIZONTAL);
+    }
+    else{
+        Video_setPos(o->anims.MidAir,0);
+        Video_setPos(o->anims.legsAnim,0);
+        Video_setPos(o->anims.legsAnim2,0);
+        Video_setPos(o->anims.Idle,0);
+        for (int i=1;i<Vector_Size(o->anims.attacks_pos);i++){
+            Video_setPos(*(Video**)Vector_Get(o->anims.attacks_pos,i),0);
+        }
+        Video_update(o->anims.Calm);
+        SDL_RenderCopyF(renderer,
+            Video_getFrame(o->anims.Calm),
+            NULL,o->base.owner->rect);
+    }
+    if (o->animOn){
+        o->timeAttacking-=dt;
+        if (o->timeAttacking<=0.f){
+            o->timeAttacking=0.f;
+            o->animOn=0;
+        }
+    }
+    o->base.lastX=ownerRect.x;
+}
+
+Weapon* Gun_create(Sprite* owner,int magSize,
+    int mags,float cooldown,Anims anims,int* dir,
+    int* midair,int* moving,array* offsets){
+    Gun* res=malloc(sizeof(Gun));
+    if (!res) return NULL;
+    res->magSize=magSize;
+    res->base.owner=owner;
+    res->bulletsInMag=0;
+    res->anims=anims;
+    res->offsets=offsets;
+    res->base.dir=dir;
+    res->base.midAir=midair;
+    res->base.moving=moving;
+    res->base.lastX = owner ? owner->rect->x : 0.f;
+    res->mags=mags;
+    res->cd=cooldown;
+    res->base.onFire=Gun_onFire;
+    res->base.update=Gun_update;
+    res->base.destroy=Gun_destroy;
+    return (Weapon*)res;
 }
 
 void HandleDelta(){
@@ -757,14 +991,11 @@ int plr_walking=0;
 int plr_dir=DIR_NONE;
 SDL_bool mouseInWindow=SDL_TRUE;
 
-SDL_FRect mouseRect={0,0,10,10};
-
 void GameOver(void){
     quit();
 }
 
 void loop(void){
-    emscripten_log(1,"Loop started");
 
     HandleDelta();
 
@@ -863,7 +1094,6 @@ void loop(void){
 
     plr.x+=plr_dx;
 
-    emscripten_log(1,"Before checking collisions");
     VECTOR_FOR(sprites,i,Sprite*){
         if (!((*i)->collidable)) continue;
         if (SDL_HasIntersectionF(&plr,(*i)->rect)){
@@ -873,7 +1103,6 @@ void loop(void){
                 plr.x=(*i)->rect->x+(*i)->rect->w;
         }
     }
-    emscripten_log(1,"After checking collisions");
 
     plr_inAir=1;
 
@@ -881,7 +1110,6 @@ void loop(void){
 
     plr.y-=plr_dy;
 
-    emscripten_log(1,"Before checking collisions (y)");
     VECTOR_FOR(sprites,i,Sprite*){
         if (!((*i)->collidable)) continue;
         if (SDL_HasIntersectionF(&plr,(*i)->rect)){
@@ -896,14 +1124,12 @@ void loop(void){
 
         }
     }
-    emscripten_log(1,"After checking collisions (y)");
 
     SDL_SetRenderTarget(renderer,Wtexture);
 
     {
         SDL_SetRenderDrawColor(renderer,100,100,100,255);
         SDL_RenderClear(renderer);
-        emscripten_log(1,"Before updating sprites");
         for (int i=0;i<Vector_Size(sprites);i++){
             Sprite* o=*(Sprite**)Vector_Get(sprites,i);
             if (o->update && o){
@@ -912,10 +1138,8 @@ void loop(void){
         }
         SDL_SetRenderDrawColor(renderer,255,255,255,255);
         SDL_RenderFillRectF(renderer,&mouseRect);
-        emscripten_log(1,"After updating sprites");
 
         int j=0;
-        emscripten_log(1,"Before destroying sprites");
         for (int i = Vector_Size(sprites) - 1; i >= 0; --i){
             Sprite* s = *(Sprite**)Vector_Get(sprites, i);
             if (!s->active && (s && s->destroy)){
@@ -923,7 +1147,6 @@ void loop(void){
                 Vector_erase(sprites,i);
             }
         }
-        emscripten_log(1,"After destroying sprites");
         
         plr_wep->update((void*)plr_wep);
         if (plr_hp<=0) GameOver();
@@ -944,9 +1167,14 @@ void loop(void){
 
 void init1(){    
     lastHp=plr_hp;
-    plr_wep=Sword_create(&plr_sprite,&plr_walking,&plr_inAir,&plr_dir,
-    CreateArrayWithElements(6,sizeof(int),&(int){0},&(int){0},
-        &(int){-3},&(int){-3},&(int){-3},&(int){-3}));
+    plr_wep=Gun_create(&plr_sprite,10,5,0.5f,(Anims){
+        .Idle=plr_animWithSwordIdle,
+        .Calm=plr_animWithSwordCalm,
+        .MidAir=plr_animWithSwordMidAir,
+        .legsAnim=plr_animWithSwordLegsWalking,
+        .legsAnim2=plr_animWithSwordLegsStaying,
+        .attacks_pos=plr_animWithSwordAttacks
+    },&plr_dir,&plr_inAir,&plr_walking,CreateArrayWithElements(6,sizeof(int),&(int){0},&(int){0},&(int){0},&(int){0},&(int){0},&(int){0}));
     sprites=CreateVector(sizeof(Sprite*));
     Vector_Resize(sprites,1024);
     {
@@ -996,7 +1224,18 @@ int main(){
     plr_animWithSwordAttacks=LoadPoses("assets/plr_animWithSwordAttacks",6);
     start=SDL_GetTicks();
     end=SDL_GetTicks();
-
+    void* pixels;
+    int pitch;
+    BulletTexture=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_STREAMING,10,10);
+    SDL_LockTexture(BulletTexture,NULL,&pixels,&pitch);
+    for (int i=0;i<10;i++){
+        Uint32* row=(Uint32*)((Uint8*)pixels+(pitch*i));
+        for (int j=0;j<10;j++){
+            row[j]=0xFFFFFF00;
+        }
+    }
+    SDL_UnlockTexture(BulletTexture);
     EM_ASM(
         console.log("Entered load");
         FS.mkdir("files");
