@@ -757,8 +757,8 @@ void Bullet_update(void* obj){
             }
             if (s->hp>0){
                 s->hp-=o->dmg;
+                o->base.active=0;
             }
-            o->base.active=0;
             return;
         }
     }
@@ -835,7 +835,44 @@ void Gun_onFire(void* obj,Vector* sprites){
     SDL_FRect* ownerRect=o->base.owner->rect;
     float targetx=ownerRect->x+ownerRect->w/2;
     float targety=ownerRect->y+ownerRect->h/2;
-    float mx=mouseRect.x,my=mouseRect.y;
+    float mx=0,my=0;
+    int range=400;
+    switch (*o->base.dir){
+        case DIR_UP:
+          mx=targetx;
+          my=ownerRect->y-range;
+          break;
+        case DIR_UP_RIGHT:
+          mx=ownerRect->x+ownerRect->w+range;
+          my=ownerRect->y-range;
+          break;
+        case DIR_UP_LEFT:
+          mx=ownerRect->x-range;
+          my=ownerRect->y-range;
+          break;
+        case DIR_DOWN:
+          mx=targetx;
+          my=ownerRect->y+ownerRect->h+range;
+          break;
+        case DIR_DOWN_RIGHT:
+          mx=ownerRect->x+ownerRect->w+range;
+          my=ownerRect->y+ownerRect->h+range;
+          break;
+        case DIR_DOWN_LEFT:
+          mx=ownerRect->x-range;
+          my=ownerRect->y+ownerRect->h+range;
+          break;
+        case DIR_RIGHT:
+          mx=ownerRect->x+ownerRect->w+range;
+          my=targety;
+          break;
+        case DIR_LEFT:
+          mx=ownerRect->x-range;
+          my=targety;
+          break;
+        default:
+            return;
+    }
     emscripten_log(1,"Mouse pos: %f %f",mx,my);
     emscripten_log(1,"size before %d",Vector_Size(sprites));
     Vector_PushBack(sprites,&(Bullet*){Bullet_create(ownerRect->x+ownerRect->w,
@@ -997,11 +1034,10 @@ float plr_dshSpeed=100.f;
 int plr_canDash=1;
 float plr_weight=1.f;
 float plr_jmpPower=7.5f;
-int plr_hp=100;
 int fullscreen=0;
 
 SDL_FRect plr={0.f,0.f,75.f,75.f};
-Sprite plr_sprite={.rect=&plr,.hp=1};
+Sprite plr_sprite={.rect=&plr,.hp=100,.active=1,.collidable=0};
 Weapon* plr_wep;
 Vector* sprites;
 float RedScreenAlpha=0.f;
@@ -1020,8 +1056,8 @@ void loop(void){
 
     HandleDelta();
 
-    if (plr_hp<lastHp) RedScreenAlpha=255;
-    lastHp=plr_hp;
+    if (plr_sprite.hp<lastHp) RedScreenAlpha=255;
+    lastHp=plr_sprite.hp;
 
     RedScreenAlpha-=dt*255;
     RedScreenAlpha=SDL_max(RedScreenAlpha,0.f);
@@ -1170,7 +1206,7 @@ void loop(void){
         }
         
         plr_wep->update((void*)plr_wep);
-        if (plr_hp<=0) GameOver();
+        if (plr_sprite.hp<=0) GameOver();
         SDL_SetRenderDrawColor(renderer,255,0,0,RedScreenAlpha);
         SDL_RenderFillRect(renderer,NULL);
     }
@@ -1187,7 +1223,7 @@ void loop(void){
 }
 
 void init1(){    
-    lastHp=plr_hp;
+    lastHp=plr_sprite.hp;
     plr_wep=Gun_create(&plr_sprite,10,5,0.5f,(Anims){
         .Idle=plr_animWithSwordIdle,
         .Calm=plr_animWithSwordCalm,
@@ -1204,10 +1240,10 @@ void init1(){
     }
     {
         Sprite* tmp=(Sprite*)Enemy_create(&plr,(SDL_FRect){100,300,100,100}
-            ,sprites,&plr_hp);
+            ,sprites,&plr_sprite.hp);
         Vector_PushBack(sprites,&tmp);
         tmp=(Sprite*)Enemy_create(&plr,(SDL_FRect){900,300,100,100}
-            ,sprites,&plr_hp);
+            ,sprites,&plr_sprite.hp);
         Vector_PushBack(sprites,&tmp);
     }
     VECTOR_FOR(sprites,i,Sprite*){
