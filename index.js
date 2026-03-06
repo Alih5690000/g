@@ -68,7 +68,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmp0xdbchkr.js
+// include: /tmp/tmpjxdehkxz.js
 if (!Module["expectedDataFileDownloads"]) Module["expectedDataFileDownloads"] = 0;
 
 Module["expectedDataFileDownloads"]++;
@@ -559,23 +559,23 @@ Module["expectedDataFileDownloads"]++;
   });
 })();
 
-// end include: /tmp/tmp0xdbchkr.js
-// include: /tmp/tmpgin6l2xl.js
+// end include: /tmp/tmpjxdehkxz.js
+// include: /tmp/tmpzddprvub.js
 // All the pre-js content up to here must remain later on, we need to run
 // it.
 if ((typeof ENVIRONMENT_IS_WASM_WORKER != "undefined" && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != "undefined" && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != "undefined" && ENVIRONMENT_IS_AUDIO_WORKLET)) Module["preRun"] = [];
 
 var necessaryPreJSTasks = Module["preRun"].slice();
 
-// end include: /tmp/tmpgin6l2xl.js
-// include: /tmp/tmpfiqwtkck.js
+// end include: /tmp/tmpzddprvub.js
+// include: /tmp/tmpvbqgek45.js
 if (!Module["preRun"]) throw "Module.preRun should exist because file support used it; did a pre-js delete it?";
 
 necessaryPreJSTasks.forEach(task => {
   if (Module["preRun"].indexOf(task) < 0) throw "All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?";
 });
 
-// end include: /tmp/tmpfiqwtkck.js
+// end include: /tmp/tmpvbqgek45.js
 var arguments_ = [];
 
 var thisProgram = "./this.program";
@@ -9538,70 +9538,70 @@ function checkIncomingModuleAPI() {
 }
 
 var ASM_CONSTS = {
-  306964992: () => {
+  306965536: () => {
     FS.syncfs(false, function(err) {
       if (err) {
         console.log("Error", err);
       }
     });
   },
-  306965064: () => {},
-  306965065: () => {},
-  306965066: () => {},
-  306965067: () => {},
-  306965068: () => {},
-  306965069: () => {},
-  306965070: () => {},
-  306965071: () => {},
-  306965072: () => {},
-  306965073: () => {},
-  306965074: () => {},
-  306965075: () => {},
-  306965076: () => {},
-  306965077: () => {},
-  306965078: () => {},
-  306965079: () => {},
-  306965080: () => {},
-  306965081: () => {},
-  306965082: () => {},
-  306965083: () => {},
-  306965084: () => {},
-  306965085: () => {},
-  306965086: () => {},
-  306965087: () => {},
-  306965088: () => {},
-  306965089: () => {},
-  306965090: () => {},
-  306965091: () => {},
-  306965092: () => {},
-  306965093: () => {},
-  306965094: () => {},
-  306965095: () => {},
-  306965096: () => {},
-  306965097: () => {},
-  306965098: () => {},
-  306965099: () => {},
-  306965100: () => {},
-  306965101: () => {},
-  306965102: () => {},
-  306965103: () => {},
-  306965104: () => {},
-  306965105: () => {},
-  306965106: () => {},
-  306965107: () => {},
-  306965108: () => {},
-  306965109: () => {},
-  306965110: () => {},
-  306965111: () => {},
-  306965112: () => {},
-  306965113: () => {},
-  306965114: () => {},
-  306965115: () => {},
-  306965116: () => {},
-  306965117: () => {},
-  306965118: () => {},
-  306965119: () => {},
-  306965120: () => {
+  306965608: () => {},
+  306965609: () => {},
+  306965610: () => {},
+  306965611: () => {},
+  306965612: () => {},
+  306965613: () => {},
+  306965614: () => {},
+  306965615: () => {},
+  306965616: () => {},
+  306965617: () => {},
+  306965618: () => {},
+  306965619: () => {},
+  306965620: () => {},
+  306965621: () => {},
+  306965622: () => {},
+  306965623: () => {},
+  306965624: () => {},
+  306965625: () => {},
+  306965626: () => {},
+  306965627: () => {},
+  306965628: () => {},
+  306965629: () => {},
+  306965630: () => {},
+  306965631: () => {},
+  306965632: () => {},
+  306965633: () => {},
+  306965634: () => {},
+  306965635: () => {},
+  306965636: () => {},
+  306965637: () => {},
+  306965638: () => {},
+  306965639: () => {},
+  306965640: () => {},
+  306965641: () => {},
+  306965642: () => {},
+  306965643: () => {},
+  306965644: () => {},
+  306965645: () => {},
+  306965646: () => {},
+  306965647: () => {},
+  306965648: () => {},
+  306965649: () => {},
+  306965650: () => {},
+  306965651: () => {},
+  306965652: () => {},
+  306965653: () => {},
+  306965654: () => {},
+  306965655: () => {},
+  306965656: () => {},
+  306965657: () => {},
+  306965658: () => {},
+  306965659: () => {},
+  306965660: () => {},
+  306965661: () => {},
+  306965662: () => {},
+  306965663: () => {},
+  306965664: () => {
     console.log("Entered load");
     FS.mkdir("files");
     FS.mount(IDBFS, {}, "files");
@@ -9610,44 +9610,44 @@ var ASM_CONSTS = {
       _Load();
     });
   },
-  306965275: () => {},
-  306965276: () => {},
-  306965277: () => {},
-  306965278: () => {},
-  306965279: () => {},
-  306965280: () => {},
-  306965281: () => {},
-  306965282: () => {},
-  306965283: () => {},
-  306965284: () => {},
-  306965285: () => {},
-  306965286: () => {},
-  306965287: () => {},
-  306965288: () => {},
-  306965289: () => {},
-  306965290: () => {},
-  306965291: () => {},
-  306965292: () => {},
-  306965293: () => {},
-  306965294: () => {},
-  306965295: () => {},
-  306965296: () => {},
-  306965297: () => {},
-  306965298: () => {},
-  306965299: () => {},
-  306965300: () => {},
-  306965301: () => {},
-  306965302: () => {},
-  306965303: () => {},
-  306965304: () => {},
-  306965305: () => {},
-  306965306: () => {},
-  306965307: () => {},
-  306965308: () => {},
-  306965309: () => {},
-  306965310: () => {},
-  306965311: () => {},
-  306965312: $0 => {
+  306965819: () => {},
+  306965820: () => {},
+  306965821: () => {},
+  306965822: () => {},
+  306965823: () => {},
+  306965824: () => {},
+  306965825: () => {},
+  306965826: () => {},
+  306965827: () => {},
+  306965828: () => {},
+  306965829: () => {},
+  306965830: () => {},
+  306965831: () => {},
+  306965832: () => {},
+  306965833: () => {},
+  306965834: () => {},
+  306965835: () => {},
+  306965836: () => {},
+  306965837: () => {},
+  306965838: () => {},
+  306965839: () => {},
+  306965840: () => {},
+  306965841: () => {},
+  306965842: () => {},
+  306965843: () => {},
+  306965844: () => {},
+  306965845: () => {},
+  306965846: () => {},
+  306965847: () => {},
+  306965848: () => {},
+  306965849: () => {},
+  306965850: () => {},
+  306965851: () => {},
+  306965852: () => {},
+  306965853: () => {},
+  306965854: () => {},
+  306965855: () => {},
+  306965856: $0 => {
     var str = UTF8ToString($0) + "\n\n" + "Abort/Retry/Ignore/AlwaysIgnore? [ariA] :";
     var reply = window.prompt(str, "i");
     if (reply === null) {
@@ -9655,7 +9655,7 @@ var ASM_CONSTS = {
     }
     return reply.length === 1 ? reply.charCodeAt(0) : -1;
   },
-  306965527: () => {
+  306966071: () => {
     if (typeof (AudioContext) !== "undefined") {
       return true;
     } else if (typeof (webkitAudioContext) !== "undefined") {
@@ -9663,7 +9663,7 @@ var ASM_CONSTS = {
     }
     return false;
   },
-  306965674: () => {
+  306966218: () => {
     if ((typeof (navigator.mediaDevices) !== "undefined") && (typeof (navigator.mediaDevices.getUserMedia) !== "undefined")) {
       return true;
     } else if (typeof (navigator.webkitGetUserMedia) !== "undefined") {
@@ -9671,7 +9671,7 @@ var ASM_CONSTS = {
     }
     return false;
   },
-  306965908: $0 => {
+  306966452: $0 => {
     if (typeof (Module["SDL2"]) === "undefined") {
       Module["SDL2"] = {};
     }
@@ -9695,11 +9695,11 @@ var ASM_CONSTS = {
     }
     return SDL2.audioContext === undefined ? -1 : 0;
   },
-  306966460: () => {
+  306967004: () => {
     var SDL2 = Module["SDL2"];
     return SDL2.audioContext.sampleRate;
   },
-  306966528: ($0, $1, $2, $3) => {
+  306967072: ($0, $1, $2, $3) => {
     var SDL2 = Module["SDL2"];
     var have_microphone = function(stream) {
       if (SDL2.capture.silenceTimer !== undefined) {
@@ -9741,7 +9741,7 @@ var ASM_CONSTS = {
       }, have_microphone, no_microphone);
     }
   },
-  306968221: ($0, $1, $2, $3) => {
+  306968765: ($0, $1, $2, $3) => {
     var SDL2 = Module["SDL2"];
     SDL2.audio.scriptProcessorNode = SDL2.audioContext["createScriptProcessor"]($1, 0, $0);
     SDL2.audio.scriptProcessorNode["onaudioprocess"] = function(e) {
@@ -9773,7 +9773,7 @@ var ASM_CONSTS = {
       SDL2.audio.silenceTimer = setInterval(silence_callback, ($1 / SDL2.audioContext.sampleRate) * 1e3);
     }
   },
-  306969396: ($0, $1) => {
+  306969940: ($0, $1) => {
     var SDL2 = Module["SDL2"];
     var numChannels = SDL2.capture.currentCaptureBuffer.numberOfChannels;
     for (var c = 0; c < numChannels; ++c) {
@@ -9792,7 +9792,7 @@ var ASM_CONSTS = {
       }
     }
   },
-  306970001: ($0, $1) => {
+  306970545: ($0, $1) => {
     var SDL2 = Module["SDL2"];
     var buf = $0 >>> 2;
     var numChannels = SDL2.audio.currentOutputBuffer["numberOfChannels"];
@@ -9806,7 +9806,7 @@ var ASM_CONSTS = {
       }
     }
   },
-  306970490: $0 => {
+  306971034: $0 => {
     var SDL2 = Module["SDL2"];
     if ($0) {
       if (SDL2.capture.silenceTimer !== undefined) {
@@ -9840,7 +9840,7 @@ var ASM_CONSTS = {
       SDL2.audioContext = undefined;
     }
   },
-  306971496: ($0, $1, $2) => {
+  306972040: ($0, $1, $2) => {
     var w = $0;
     var h = $1;
     var pixels = $2;
@@ -9911,7 +9911,7 @@ var ASM_CONSTS = {
     }
     SDL2.ctx.putImageData(SDL2.image, 0, 0);
   },
-  306972962: ($0, $1, $2, $3, $4) => {
+  306973506: ($0, $1, $2, $3, $4) => {
     var w = $0;
     var h = $1;
     var hot_x = $2;
@@ -9948,18 +9948,18 @@ var ASM_CONSTS = {
     stringToUTF8(url, urlBuf, url.length + 1);
     return urlBuf;
   },
-  306973950: $0 => {
+  306974494: $0 => {
     if (Module["canvas"]) {
       Module["canvas"].style["cursor"] = UTF8ToString($0);
     }
   },
-  306974033: () => {
+  306974577: () => {
     if (Module["canvas"]) {
       Module["canvas"].style["cursor"] = "none";
     }
   },
-  306974102: () => window.innerWidth,
-  306974132: () => window.innerHeight
+  306974646: () => window.innerWidth,
+  306974676: () => window.innerHeight
 };
 
 // Imports from the Wasm binary.

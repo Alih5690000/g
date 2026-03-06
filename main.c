@@ -21,7 +21,11 @@ void SDL_MoveF(SDL_FRect* r,
     float dy = target_y - cy;
 
     float dist = sqrtf(dx*dx + dy*dy);
-    if (dist < 0.001f) return;
+    if (dist < speed*dt) {
+        r->x=target_x;
+        r->y=target_y;
+        return;
+    }
 
     float step = speed * dt;
     if (step > dist) step = dist;
@@ -739,6 +743,10 @@ void Bullet_update(void* obj){
     emscripten_log(1,"Bullet update");
     Bullet* o=(Bullet*)obj;
     SDL_MoveF(o->base.rect,o->targetx,o->targety,o->speed,dt);
+    if ((int)o->base.rect->x==(int)o->targetx && (int)o->base.rect->y==(int)o->targety){
+        o->base.active=0;
+        return;
+    }
     for (int i=0;i<Vector_Size(o->base.sprites);i++){
         Sprite* s=*(Sprite**)Vector_Get(o->base.sprites,i);
         if (s==&o->base || !s->active) continue;
@@ -805,22 +813,34 @@ void Gun_destroy(void* obj){
 void Gun_onFire(void* obj,Vector* sprites){
     emscripten_log(1,"Gun onFire");
     Gun* o=(Gun*)obj;
-    if(o->base.owner->hp<=0 || o->cd>0.f) return;
+    if(o->base.owner->hp<=0 || o->cd>0.f){
+        emscripten_log(1,"Can't fire (dead or cd)");
+        return;
+    }
     if (o->bulletsInMag<=0){
-        if (o->mags<=0) return;
+        emscripten_log(1,"No bullets in magazine");
+        if (o->mags<=0){
+            emscripten_log(1,"No magazines left");
+            return;
+        }
         o->cd=1.f;
         o->mags--;
         o->bulletsInMag=o->magSize;
+        return;
     }
     o->animOn=1;
     o->timeAttacking=0.5f;
+    o->cd=0.5f;
     o->bulletsInMag--;
     SDL_FRect* ownerRect=o->base.owner->rect;
     float targetx=ownerRect->x+ownerRect->w/2;
     float targety=ownerRect->y+ownerRect->h/2;
     float mx=mouseRect.x,my=mouseRect.y;
-    Vector_PushBack(sprites,&(Bullet*){Bullet_create(ownerRect->x+ownerRect->w/2,
+    emscripten_log(1,"Mouse pos: %f %f",mx,my);
+    emscripten_log(1,"size before %d",Vector_Size(sprites));
+    Vector_PushBack(sprites,&(Bullet*){Bullet_create(ownerRect->x+ownerRect->w,
         ownerRect->y+ownerRect->h/2,mx,my,500.f,10,sprites)});
+    emscripten_log(1,"size after %d",Vector_Size(sprites));
 }
 
 void Gun_update(void* obj){
@@ -944,6 +964,7 @@ Weapon* Gun_create(Sprite* owner,int magSize,
     Gun* res=malloc(sizeof(Gun));
     if (!res) return NULL;
     res->magSize=magSize;
+    res->bulletsInMag=magSize;
     res->base.owner=owner;
     res->bulletsInMag=0;
     res->anims=anims;
@@ -980,7 +1001,7 @@ int plr_hp=100;
 int fullscreen=0;
 
 SDL_FRect plr={0.f,0.f,75.f,75.f};
-Sprite plr_sprite={.rect=&plr};
+Sprite plr_sprite={.rect=&plr,.hp=1};
 Weapon* plr_wep;
 Vector* sprites;
 float RedScreenAlpha=0.f;
