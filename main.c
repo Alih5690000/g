@@ -913,6 +913,7 @@ void Gun_update(void* obj){
         Video_update(t);
         emscripten_log(1,"updated attack anim");
         if (*o->base.moving){
+            emscripten_log(1,"Moving while attacking, updating legs anim");
             Video_update(o->anims.legsAnim);
             Video_setPos(o->anims.legsAnim2,0);
             if (o->base.lastX<ownerRect.x)
@@ -925,6 +926,7 @@ void Gun_update(void* obj){
                     NULL,&drawRect,0,NULL,SDL_FLIP_HORIZONTAL);
         }
         else{
+            emscripten_log(1,"Not moving while attacking, updating legsAnim2");
             Video_update(o->anims.legsAnim2);
             
             Video_setPos(o->anims.legsAnim,0);
@@ -935,6 +937,8 @@ void Gun_update(void* obj){
         if (*o->base.dir!=0){
             drawRect.y-=*(int*)Array_get(o->offsets,Video_getPos(o->anims.legsAnim2));
             Video* t=*(Video**)Vector_Get(o->anims.attacks_pos,*o->base.dir);
+            emscripten_log(1,"Drawing attack anim with offset %d",
+                *(int*)Array_get(o->offsets,Video_getPos(o->anims.legsAnim2)));
 
             int res=SDL_RenderCopyF(renderer,
                 Video_getFrame(t),
@@ -942,6 +946,7 @@ void Gun_update(void* obj){
             if (res){
 
             }
+            emscripten_log(1,"Finished drawing with offsets");
         }
     }
     else if (*o->base.midAir){
@@ -989,6 +994,7 @@ void Gun_update(void* obj){
             Video_getFrame(o->anims.Calm),
             NULL,o->base.owner->rect);
     }
+    emscripten_log(1,"About to handle animOn");
     if (o->animOn){
         o->timeAttacking-=dt;
         if (o->timeAttacking<=0.f){

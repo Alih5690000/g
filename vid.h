@@ -71,6 +71,8 @@ SDL_Texture* DeepCopyTextureEx(SDL_Renderer* renderer, SDL_Texture* src,
     return dst;
 }
 
+SDL_Texture* dulltxt=NULL;
+
 typedef struct Video{
     Vector* frames;
     size_t pos;
@@ -82,6 +84,12 @@ typedef struct Video{
 } Video;
 
 Video* Video_create(const char* name, SDL_Renderer* r,int fps,float* dt){
+    if (!dulltxt){
+        SDL_Surface* surf=SDL_CreateRGBSurfaceWithFormat(0,1,1,32,SDL_PIXELFORMAT_RGBA8888);
+        SDL_FillRect(surf,NULL,0xFFFFFFFF);
+        dulltxt=SDL_CreateTextureFromSurface(r,surf);
+        SDL_FreeSurface(surf);
+    }
     Video* v=(Video*)malloc(sizeof(Video));
     v->renderer=r;
     v->fps=fps;
@@ -131,6 +139,9 @@ Video* Video_CreateDull(){
 }
 
 SDL_Texture* Video_getFrame(Video* v){
+    if (v->frames->__pos==0){
+        return dulltxt;
+    }
     SDL_Texture* res=*((SDL_Texture**)Vector_Get(v->frames,v->pos));
     return res;
 }
