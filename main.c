@@ -482,7 +482,6 @@ Vector* LoadPoses(const char* path,int fps){
     Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt)});
     snprintf(buf,256,"%s/Down",path);
     Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt)});
-    
     Vector_PushBack(res,&(Video*){CreateReversed(
         *(Video**)Vector_Get(res,DIR_DOWN_RIGHT)
     )});
@@ -828,6 +827,7 @@ void Gun_onFire(void* obj,Vector* sprites){
         o->bulletsInMag=o->magSize;
         return;
     }
+    emscripten_log(1,"shooting at dir %d",*o->base.dir);
     o->animOn=1;
     o->timeAttacking=0.5f;
     o->cd=0.5f;
@@ -875,8 +875,9 @@ void Gun_onFire(void* obj,Vector* sprites){
     }
     emscripten_log(1,"Mouse pos: %f %f",mx,my);
     emscripten_log(1,"size before %d",Vector_Size(sprites));
-    Vector_PushBack(sprites,&(Bullet*){Bullet_create(ownerRect->x+ownerRect->w,
-        ownerRect->y+ownerRect->h/2,mx,my,500.f,10,sprites)});
+    Bullet* newBullet = Bullet_create(ownerRect->x+ownerRect->w,
+        ownerRect->y+ownerRect->h/2,mx,my,500.f,10,sprites);
+    Vector_PushBack(sprites,&newBullet);
     emscripten_log(1,"size after %d",Vector_Size(sprites));
 }
 
@@ -907,8 +908,10 @@ void Gun_update(void* obj){
             if (*o->base.dir!=i)
                 Video_setPos(*(Video**)Vector_Get(o->anims.attacks_pos,i),0);
         }
+        emscripten_log(1,"set poses. About to update attck pos at dir %d",*o->base.dir);
         Video* t=*(Video**)Vector_Get(o->anims.attacks_pos,*o->base.dir);
         Video_update(t);
+        emscripten_log(1,"updated attack anim");
         if (*o->base.moving){
             Video_update(o->anims.legsAnim);
             Video_setPos(o->anims.legsAnim2,0);
@@ -937,6 +940,7 @@ void Gun_update(void* obj){
                 Video_getFrame(t),
                 NULL,&drawRect);
             if (res){
+
             }
         }
     }

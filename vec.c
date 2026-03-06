@@ -210,12 +210,12 @@ void Vector_insert(Vector* v, int pos, const void* data){
 
 
 void Vector_PushBack(Vector* v,const void* ell){
-    char* ptr=(char*)v->__data;
     if (v->__pos>=v->__size){
         printf("resized");
         fflush(stdout);
         Vector_Resize(v,v->__size*2);
     }
+    char* ptr=(char*)v->__data;
     memcpy(ptr+v->__pos*v->__ellsize,ell,v->__ellsize);
     v->__pos+=1;
 }

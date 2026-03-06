@@ -68,7 +68,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmphuxickuf.js
+// include: /tmp/tmp62377hw_.js
 if (!Module["expectedDataFileDownloads"]) Module["expectedDataFileDownloads"] = 0;
 
 Module["expectedDataFileDownloads"]++;
@@ -147,11 +147,11 @@ Module["expectedDataFileDownloads"]++;
       Module["FS_createPath"]("/assets", "midair", true, true);
       Module["FS_createPath"]("/assets", "plr_animWithGunAttacks", true, true);
       Module["FS_createPath"]("/assets", "plr_animWithSwordAttacks", true, true);
+      Module["FS_createPath"]("/assets/plr_animWithSwordAttacks", "Down", true, true);
       Module["FS_createPath"]("/assets/plr_animWithSwordAttacks", "DownRight", true, true);
       Module["FS_createPath"]("/assets/plr_animWithSwordAttacks", "Right", true, true);
       Module["FS_createPath"]("/assets/plr_animWithSwordAttacks", "Up", true, true);
       Module["FS_createPath"]("/assets/plr_animWithSwordAttacks", "UpRight", true, true);
-      Module["FS_createPath"]("/assets/plr_animWithSwordAttacks", "uu", true, true);
       Module["FS_createPath"]("/assets", "plr_animWithSwordCalm", true, true);
       Module["FS_createPath"]("/assets", "plr_animWithSwordIdle", true, true);
       Module["FS_createPath"]("/assets", "plr_animWithSwordLegsStaying", true, true);
@@ -378,204 +378,196 @@ Module["expectedDataFileDownloads"]++;
       "start": 126520,
       "end": 147790
     }, {
-      "filename": "/assets/plr_animWithSwordAttacks/DownRight/frame0.png",
+      "filename": "/assets/plr_animWithSwordAttacks/Down/frame0.gif",
       "start": 147790,
-      "end": 151572
+      "end": 151886
+    }, {
+      "filename": "/assets/plr_animWithSwordAttacks/DownRight/frame0.png",
+      "start": 151886,
+      "end": 155668
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/DownRight/frame1.png",
-      "start": 151572,
-      "end": 155963
+      "start": 155668,
+      "end": 160059
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/DownRight/frame2.png",
-      "start": 155963,
-      "end": 160381
+      "start": 160059,
+      "end": 164477
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Right/frame0.png",
-      "start": 160381,
-      "end": 165155
+      "start": 164477,
+      "end": 169251
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Right/frame1.png",
-      "start": 165155,
-      "end": 169929
+      "start": 169251,
+      "end": 174025
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Right/frame2.png",
-      "start": 169929,
-      "end": 175021
+      "start": 174025,
+      "end": 179117
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Right/frame3.png",
-      "start": 175021,
-      "end": 180295
+      "start": 179117,
+      "end": 184391
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Up/frame1.png",
-      "start": 180295,
-      "end": 184222
+      "start": 184391,
+      "end": 188318
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Up/frame2.png",
-      "start": 184222,
-      "end": 188253
+      "start": 188318,
+      "end": 192349
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Up/frame3.png",
-      "start": 188253,
-      "end": 192099
+      "start": 192349,
+      "end": 196195
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/UpRight.gif",
-      "start": 192099,
-      "end": 209271
+      "start": 196195,
+      "end": 213367
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/UpRight/frame1.png",
-      "start": 209271,
-      "end": 212682
+      "start": 213367,
+      "end": 216778
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/UpRight/frame2.png",
-      "start": 212682,
-      "end": 216310
+      "start": 216778,
+      "end": 220406
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/UpRight/frame3.png",
-      "start": 216310,
-      "end": 220266
-    }, {
-      "filename": "/assets/plr_animWithSwordAttacks/uu/frame1.png",
-      "start": 220266,
-      "end": 226374
-    }, {
-      "filename": "/assets/plr_animWithSwordAttacks/uu/frame2.png",
-      "start": 226374,
-      "end": 231883
-    }, {
-      "filename": "/assets/plr_animWithSwordAttacks/uu/frame3.png",
-      "start": 231883,
-      "end": 237175
+      "start": 220406,
+      "end": 224362
     }, {
       "filename": "/assets/plr_animWithSwordCalm/frame0.png",
-      "start": 237175,
-      "end": 243553
+      "start": 224362,
+      "end": 230740
     }, {
       "filename": "/assets/plr_animWithSwordCalm/frame1.png",
-      "start": 243553,
-      "end": 249931
+      "start": 230740,
+      "end": 237118
     }, {
       "filename": "/assets/plr_animWithSwordCalm/frame2.png",
-      "start": 249931,
-      "end": 256309
+      "start": 237118,
+      "end": 243496
     }, {
       "filename": "/assets/plr_animWithSwordCalm/frame3.png",
-      "start": 256309,
-      "end": 262573
+      "start": 243496,
+      "end": 249760
     }, {
       "filename": "/assets/plr_animWithSwordCalm/frame4.png",
-      "start": 262573,
-      "end": 268837
+      "start": 249760,
+      "end": 256024
     }, {
       "filename": "/assets/plr_animWithSwordCalm/frame5.png",
-      "start": 268837,
-      "end": 275101
+      "start": 256024,
+      "end": 262288
     }, {
       "filename": "/assets/plr_animWithSwordIdle/frame0.png",
-      "start": 275101,
-      "end": 281094
+      "start": 262288,
+      "end": 268281
     }, {
       "filename": "/assets/plr_animWithSwordIdle/frame1.png",
-      "start": 281094,
-      "end": 287087
+      "start": 268281,
+      "end": 274274
     }, {
       "filename": "/assets/plr_animWithSwordIdle/frame2.png",
-      "start": 287087,
-      "end": 291985
+      "start": 274274,
+      "end": 279172
     }, {
       "filename": "/assets/plr_animWithSwordIdle/frame3.png",
-      "start": 291985,
-      "end": 298203
+      "start": 279172,
+      "end": 285390
     }, {
       "filename": "/assets/plr_animWithSwordIdle/frame4.png",
-      "start": 298203,
-      "end": 304421
+      "start": 285390,
+      "end": 291608
     }, {
       "filename": "/assets/plr_animWithSwordIdle/frame5.png",
-      "start": 304421,
-      "end": 309319
+      "start": 291608,
+      "end": 296506
     }, {
       "filename": "/assets/plr_animWithSwordLegsStaying/frame0.png",
-      "start": 309319,
-      "end": 312995
+      "start": 296506,
+      "end": 300182
     }, {
       "filename": "/assets/plr_animWithSwordLegsStaying/frame1.png",
-      "start": 312995,
-      "end": 316671
+      "start": 300182,
+      "end": 303858
     }, {
       "filename": "/assets/plr_animWithSwordLegsStaying/frame2.png",
-      "start": 316671,
-      "end": 320347
+      "start": 303858,
+      "end": 307534
     }, {
       "filename": "/assets/plr_animWithSwordLegsStaying/frame3.png",
-      "start": 320347,
-      "end": 323984
+      "start": 307534,
+      "end": 311171
     }, {
       "filename": "/assets/plr_animWithSwordLegsStaying/frame4.png",
-      "start": 323984,
-      "end": 327621
+      "start": 311171,
+      "end": 314808
     }, {
       "filename": "/assets/plr_animWithSwordLegsStaying/frame5.png",
-      "start": 327621,
-      "end": 331258
+      "start": 314808,
+      "end": 318445
     }, {
       "filename": "/assets/plr_animWithSwordLegsWalking/frame0.png",
-      "start": 331258,
-      "end": 336134
+      "start": 318445,
+      "end": 323321
     }, {
       "filename": "/assets/plr_animWithSwordLegsWalking/frame1.png",
-      "start": 336134,
-      "end": 341010
+      "start": 323321,
+      "end": 328197
     }, {
       "filename": "/assets/plr_animWithSwordLegsWalking/frame2.png",
-      "start": 341010,
-      "end": 345886
+      "start": 328197,
+      "end": 333073
     }, {
       "filename": "/assets/plr_animWithSwordLegsWalking/frame3.png",
-      "start": 345886,
-      "end": 350325
+      "start": 333073,
+      "end": 337512
     }, {
       "filename": "/assets/plr_animWithSwordLegsWalking/frame4.png",
-      "start": 350325,
-      "end": 354764
+      "start": 337512,
+      "end": 341951
     }, {
       "filename": "/assets/plr_animWithSwordLegsWalking/frame5.png",
-      "start": 354764,
-      "end": 359203
+      "start": 341951,
+      "end": 346390
     }, {
       "filename": "/assets/plr_animWithSwordMidAir/frame0.png",
-      "start": 359203,
-      "end": 365828
+      "start": 346390,
+      "end": 353015
     }, {
       "filename": "/assets/plr_animWithSwordMidAir/frame1.png",
-      "start": 365828,
-      "end": 372453
+      "start": 353015,
+      "end": 359640
     }, {
       "filename": "/assets/plr_animWithSwordMidAir/frame2.png",
-      "start": 372453,
-      "end": 379078
+      "start": 359640,
+      "end": 366265
     } ],
-    "remote_package_size": 379078,
-    "package_uuid": "sha256-7aa80a061a4ef0204cdbd0b9000bb6edfaabccec9bca4f2426538ac8595d05a3"
+    "remote_package_size": 366265,
+    "package_uuid": "sha256-4df70ee830069c8051f79d1b18b73209262fd4454122d6484cd5ef935559a766"
   });
 })();
 
-// end include: /tmp/tmphuxickuf.js
-// include: /tmp/tmp9yduced4.js
+// end include: /tmp/tmp62377hw_.js
+// include: /tmp/tmp1jwpvrmd.js
 // All the pre-js content up to here must remain later on, we need to run
 // it.
 if ((typeof ENVIRONMENT_IS_WASM_WORKER != "undefined" && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != "undefined" && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != "undefined" && ENVIRONMENT_IS_AUDIO_WORKLET)) Module["preRun"] = [];
 
 var necessaryPreJSTasks = Module["preRun"].slice();
 
-// end include: /tmp/tmp9yduced4.js
-// include: /tmp/tmp0khel6if.js
+// end include: /tmp/tmp1jwpvrmd.js
+// include: /tmp/tmpm2xs8mdd.js
 if (!Module["preRun"]) throw "Module.preRun should exist because file support used it; did a pre-js delete it?";
 
 necessaryPreJSTasks.forEach(task => {
   if (Module["preRun"].indexOf(task) < 0) throw "All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?";
 });
 
-// end include: /tmp/tmp0khel6if.js
+// end include: /tmp/tmpm2xs8mdd.js
 var arguments_ = [];
 
 var thisProgram = "./this.program";
@@ -9538,70 +9530,70 @@ function checkIncomingModuleAPI() {
 }
 
 var ASM_CONSTS = {
-  306965472: () => {
+  306965824: () => {
     FS.syncfs(false, function(err) {
       if (err) {
         console.log("Error", err);
       }
     });
   },
-  306965544: () => {},
-  306965545: () => {},
-  306965546: () => {},
-  306965547: () => {},
-  306965548: () => {},
-  306965549: () => {},
-  306965550: () => {},
-  306965551: () => {},
-  306965552: () => {},
-  306965553: () => {},
-  306965554: () => {},
-  306965555: () => {},
-  306965556: () => {},
-  306965557: () => {},
-  306965558: () => {},
-  306965559: () => {},
-  306965560: () => {},
-  306965561: () => {},
-  306965562: () => {},
-  306965563: () => {},
-  306965564: () => {},
-  306965565: () => {},
-  306965566: () => {},
-  306965567: () => {},
-  306965568: () => {},
-  306965569: () => {},
-  306965570: () => {},
-  306965571: () => {},
-  306965572: () => {},
-  306965573: () => {},
-  306965574: () => {},
-  306965575: () => {},
-  306965576: () => {},
-  306965577: () => {},
-  306965578: () => {},
-  306965579: () => {},
-  306965580: () => {},
-  306965581: () => {},
-  306965582: () => {},
-  306965583: () => {},
-  306965584: () => {},
-  306965585: () => {},
-  306965586: () => {},
-  306965587: () => {},
-  306965588: () => {},
-  306965589: () => {},
-  306965590: () => {},
-  306965591: () => {},
-  306965592: () => {},
-  306965593: () => {},
-  306965594: () => {},
-  306965595: () => {},
-  306965596: () => {},
-  306965597: () => {},
-  306965598: () => {},
-  306965599: () => {},
-  306965600: () => {
+  306965896: () => {},
+  306965897: () => {},
+  306965898: () => {},
+  306965899: () => {},
+  306965900: () => {},
+  306965901: () => {},
+  306965902: () => {},
+  306965903: () => {},
+  306965904: () => {},
+  306965905: () => {},
+  306965906: () => {},
+  306965907: () => {},
+  306965908: () => {},
+  306965909: () => {},
+  306965910: () => {},
+  306965911: () => {},
+  306965912: () => {},
+  306965913: () => {},
+  306965914: () => {},
+  306965915: () => {},
+  306965916: () => {},
+  306965917: () => {},
+  306965918: () => {},
+  306965919: () => {},
+  306965920: () => {},
+  306965921: () => {},
+  306965922: () => {},
+  306965923: () => {},
+  306965924: () => {},
+  306965925: () => {},
+  306965926: () => {},
+  306965927: () => {},
+  306965928: () => {},
+  306965929: () => {},
+  306965930: () => {},
+  306965931: () => {},
+  306965932: () => {},
+  306965933: () => {},
+  306965934: () => {},
+  306965935: () => {},
+  306965936: () => {},
+  306965937: () => {},
+  306965938: () => {},
+  306965939: () => {},
+  306965940: () => {},
+  306965941: () => {},
+  306965942: () => {},
+  306965943: () => {},
+  306965944: () => {},
+  306965945: () => {},
+  306965946: () => {},
+  306965947: () => {},
+  306965948: () => {},
+  306965949: () => {},
+  306965950: () => {},
+  306965951: () => {},
+  306965952: () => {
     console.log("Entered load");
     FS.mkdir("files");
     FS.mount(IDBFS, {}, "files");
@@ -9610,44 +9602,44 @@ var ASM_CONSTS = {
       _Load();
     });
   },
-  306965755: () => {},
-  306965756: () => {},
-  306965757: () => {},
-  306965758: () => {},
-  306965759: () => {},
-  306965760: () => {},
-  306965761: () => {},
-  306965762: () => {},
-  306965763: () => {},
-  306965764: () => {},
-  306965765: () => {},
-  306965766: () => {},
-  306965767: () => {},
-  306965768: () => {},
-  306965769: () => {},
-  306965770: () => {},
-  306965771: () => {},
-  306965772: () => {},
-  306965773: () => {},
-  306965774: () => {},
-  306965775: () => {},
-  306965776: () => {},
-  306965777: () => {},
-  306965778: () => {},
-  306965779: () => {},
-  306965780: () => {},
-  306965781: () => {},
-  306965782: () => {},
-  306965783: () => {},
-  306965784: () => {},
-  306965785: () => {},
-  306965786: () => {},
-  306965787: () => {},
-  306965788: () => {},
-  306965789: () => {},
-  306965790: () => {},
-  306965791: () => {},
-  306965792: $0 => {
+  306966107: () => {},
+  306966108: () => {},
+  306966109: () => {},
+  306966110: () => {},
+  306966111: () => {},
+  306966112: () => {},
+  306966113: () => {},
+  306966114: () => {},
+  306966115: () => {},
+  306966116: () => {},
+  306966117: () => {},
+  306966118: () => {},
+  306966119: () => {},
+  306966120: () => {},
+  306966121: () => {},
+  306966122: () => {},
+  306966123: () => {},
+  306966124: () => {},
+  306966125: () => {},
+  306966126: () => {},
+  306966127: () => {},
+  306966128: () => {},
+  306966129: () => {},
+  306966130: () => {},
+  306966131: () => {},
+  306966132: () => {},
+  306966133: () => {},
+  306966134: () => {},
+  306966135: () => {},
+  306966136: () => {},
+  306966137: () => {},
+  306966138: () => {},
+  306966139: () => {},
+  306966140: () => {},
+  306966141: () => {},
+  306966142: () => {},
+  306966143: () => {},
+  306966144: $0 => {
     var str = UTF8ToString($0) + "\n\n" + "Abort/Retry/Ignore/AlwaysIgnore? [ariA] :";
     var reply = window.prompt(str, "i");
     if (reply === null) {
@@ -9655,7 +9647,7 @@ var ASM_CONSTS = {
     }
     return reply.length === 1 ? reply.charCodeAt(0) : -1;
   },
-  306966007: () => {
+  306966359: () => {
     if (typeof (AudioContext) !== "undefined") {
       return true;
     } else if (typeof (webkitAudioContext) !== "undefined") {
@@ -9663,7 +9655,7 @@ var ASM_CONSTS = {
     }
     return false;
   },
-  306966154: () => {
+  306966506: () => {
     if ((typeof (navigator.mediaDevices) !== "undefined") && (typeof (navigator.mediaDevices.getUserMedia) !== "undefined")) {
       return true;
     } else if (typeof (navigator.webkitGetUserMedia) !== "undefined") {
@@ -9671,7 +9663,7 @@ var ASM_CONSTS = {
     }
     return false;
   },
-  306966388: $0 => {
+  306966740: $0 => {
     if (typeof (Module["SDL2"]) === "undefined") {
       Module["SDL2"] = {};
     }
@@ -9695,11 +9687,11 @@ var ASM_CONSTS = {
     }
     return SDL2.audioContext === undefined ? -1 : 0;
   },
-  306966940: () => {
+  306967292: () => {
     var SDL2 = Module["SDL2"];
     return SDL2.audioContext.sampleRate;
   },
-  306967008: ($0, $1, $2, $3) => {
+  306967360: ($0, $1, $2, $3) => {
     var SDL2 = Module["SDL2"];
     var have_microphone = function(stream) {
       if (SDL2.capture.silenceTimer !== undefined) {
@@ -9741,7 +9733,7 @@ var ASM_CONSTS = {
       }, have_microphone, no_microphone);
     }
   },
-  306968701: ($0, $1, $2, $3) => {
+  306969053: ($0, $1, $2, $3) => {
     var SDL2 = Module["SDL2"];
     SDL2.audio.scriptProcessorNode = SDL2.audioContext["createScriptProcessor"]($1, 0, $0);
     SDL2.audio.scriptProcessorNode["onaudioprocess"] = function(e) {
@@ -9773,7 +9765,7 @@ var ASM_CONSTS = {
       SDL2.audio.silenceTimer = setInterval(silence_callback, ($1 / SDL2.audioContext.sampleRate) * 1e3);
     }
   },
-  306969876: ($0, $1) => {
+  306970228: ($0, $1) => {
     var SDL2 = Module["SDL2"];
     var numChannels = SDL2.capture.currentCaptureBuffer.numberOfChannels;
     for (var c = 0; c < numChannels; ++c) {
@@ -9792,7 +9784,7 @@ var ASM_CONSTS = {
       }
     }
   },
-  306970481: ($0, $1) => {
+  306970833: ($0, $1) => {
     var SDL2 = Module["SDL2"];
     var buf = $0 >>> 2;
     var numChannels = SDL2.audio.currentOutputBuffer["numberOfChannels"];
@@ -9806,7 +9798,7 @@ var ASM_CONSTS = {
       }
     }
   },
-  306970970: $0 => {
+  306971322: $0 => {
     var SDL2 = Module["SDL2"];
     if ($0) {
       if (SDL2.capture.silenceTimer !== undefined) {
@@ -9840,7 +9832,7 @@ var ASM_CONSTS = {
       SDL2.audioContext = undefined;
     }
   },
-  306971976: ($0, $1, $2) => {
+  306972328: ($0, $1, $2) => {
     var w = $0;
     var h = $1;
     var pixels = $2;
@@ -9911,7 +9903,7 @@ var ASM_CONSTS = {
     }
     SDL2.ctx.putImageData(SDL2.image, 0, 0);
   },
-  306973442: ($0, $1, $2, $3, $4) => {
+  306973794: ($0, $1, $2, $3, $4) => {
     var w = $0;
     var h = $1;
     var hot_x = $2;
@@ -9948,18 +9940,18 @@ var ASM_CONSTS = {
     stringToUTF8(url, urlBuf, url.length + 1);
     return urlBuf;
   },
-  306974430: $0 => {
+  306974782: $0 => {
     if (Module["canvas"]) {
       Module["canvas"].style["cursor"] = UTF8ToString($0);
     }
   },
-  306974513: () => {
+  306974865: () => {
     if (Module["canvas"]) {
       Module["canvas"].style["cursor"] = "none";
     }
   },
-  306974582: () => window.innerWidth,
-  306974612: () => window.innerHeight
+  306974934: () => window.innerWidth,
+  306974964: () => window.innerHeight
 };
 
 // Imports from the Wasm binary.
