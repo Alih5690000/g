@@ -107,7 +107,13 @@ typedef struct Sprite{
     void (*update)(void*);
     void (*destroy)(void*);
     void (*reconstruct)(void*);
+    void (*takedmg)(void*,int);
 } Sprite;
+
+void Sprite_takedmg(void* obj,int dmg){
+    Sprite* o=(Sprite*)obj;
+    o->hp-=dmg;
+}
 
 typedef struct BloodParticle{
     Sprite base;
@@ -179,6 +185,7 @@ BloodParticle* BloodParticle_create(float dy,float dx,SDL_FRect rect,Vector* spr
     o->lifetime=3.f;
     o->base.destroy=BloodParticle_destroy;
     o->base.update=BloodParticle_update;
+    o->base.takedmg=Sprite_takedmg;
     return o;
 }
 
@@ -222,6 +229,7 @@ PuddleOfBlood* PuddleOfBlood_create(SDL_FRect rect){
     o->base.collidable=0;
     o->base.update=PuddleOfBlood_update;
     o->base.destroy=PuddleOfBlood_destroy;
+    o->base.takedmg=Sprite_takedmg;
     return o;
 }
 
@@ -334,7 +342,7 @@ void Enemy_update(void* obj){
     }
 
     if (SDL_HasIntersectionF(o->target,o->base.rect) && o->cd<=0.f) {
-        *o->hp-=o->damage;
+        o->base.takedmg(o, o->damage);
         o->cd=o->paramCd;
     }
     o->cd-=dt;
@@ -369,6 +377,7 @@ Enemy* Enemy_create(SDL_FRect* target,SDL_FRect rect,Vector* sprites,int* hp){
     o->hp=hp;
     o->base.update=Enemy_update;
     o->base.destroy=Enemy_destroy;
+    o->base.takedmg=Sprite_takedmg;
     o->base.txt=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_STREAMING,75,10);
     void* pixels;
@@ -404,6 +413,7 @@ void* Wall_create(SDL_FRect rect) {
     Wall* o=malloc(sizeof(Wall)) ;
     o->base.update=Wall_update;
     o->base.destroy=Wall_destroy;
+    o->base.takedmg=Sprite_takedmg;
     o->base.collidable=1;
     o->base.active=1;
     o->base.hp=0;
@@ -561,7 +571,7 @@ void Sword_onFire(void* obj,Vector* ens){
     int backup_hp=o->base.owner->hp;
     VECTOR_FOR(ens,i,Sprite*){
         if (SDL_HasIntersectionF(&dmgRect,(*i)->rect) && (*i)->hp>0) {
-            (**i).hp-=o->damage;
+            (**i).takedmg(*i,o->damage);
         }
         j++;
     }
@@ -755,7 +765,7 @@ void Bullet_update(void* obj){
                 return;
             }
             if (s->hp>0){
-                s->hp-=o->dmg;
+                s->takedmg(s,o->dmg);
                 o->base.active=0;
             }
             return;
@@ -786,6 +796,7 @@ Bullet* Bullet_create(float x,float y,float targetx,float targety
     o->base.txt=BulletTexture;
     o->base.update=Bullet_update;
     o->base.destroy=Bullet_destroy;
+    o->base.takedmg=Sprite_takedmg;
     o->base.collidable=0;
     o->base.active=1;
     o->base.hp=-1;
