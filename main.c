@@ -506,14 +506,14 @@ Vector* LoadPoses(const char* path,int fps){
     return res;
 }
 
-typedef struct Anims{
+typedef struct SwordAnims{
     Video* legsAnim;
     Video* legsAnim2;
     Video* Idle;
     Video* Calm;
     Video* MidAir;
     Vector* attacks_pos;
-} Anims;
+} SwordAnims;
 
 typedef struct Sword{
     Weapon base;
@@ -523,7 +523,7 @@ typedef struct Sword{
     float cd;
     int lastLoops;
     array* offsets;
-    Anims anims;
+    SwordAnims anims;
     SDL_Texture* txt;
 } Sword;
 
@@ -716,7 +716,7 @@ Vector* CopyVideosShallow(Vector* v){
 
 
 
-void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir,array* offsets,Anims anims){
+void* Sword_create(Sprite* owner,int* moving,int* midAir,int* dir,array* offsets,SwordAnims anims){
     Sword* res=malloc(sizeof(Sword));
     res->anims=anims;
     res->offsets=offsets;
@@ -803,6 +803,15 @@ Bullet* Bullet_create(float x,float y,float targetx,float targety
     return o;
 }
 
+typedef struct GunAnims{
+    Video* legsAnim;
+    Video* legsAnim2;
+    Video* Idle;
+    Video* Calm;
+    Video* MidAir;
+    Vector* attacks_pos;
+} GunAnims;
+
 typedef struct Gun{
     Weapon base;
     int magSize;
@@ -810,7 +819,7 @@ typedef struct Gun{
     int animOn;
     int mags;
     float timeAttacking;
-    Anims anims;
+    GunAnims anims;
     array* offsets;
     float cd;
 } Gun;
@@ -1017,7 +1026,7 @@ void Gun_update(void* obj){
 }
 
 Weapon* Gun_create(Sprite* owner,int magSize,
-    int mags,float cooldown,Anims anims,int* dir,
+    int mags,float cooldown,GunAnims anims,int* dir,
     int* midair,int* moving,array* offsets){
     Gun* res=malloc(sizeof(Gun));
     if (!res) return NULL;
@@ -1245,7 +1254,7 @@ void loop(void){
 
 void init1(){    
     lastHp=plr_sprite.hp;
-    plr_wep=Gun_create(&plr_sprite,10,5,0.5f,(Anims){
+    plr_wep=Gun_create(&plr_sprite,10,5,0.5f,(GunAnims){
         .Idle=plr_animWithSwordIdle,
         .Calm=plr_animWithSwordCalm,
         .MidAir=plr_animWithSwordMidAir,

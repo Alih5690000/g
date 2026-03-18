@@ -68,7 +68,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /tmp/tmp_1uzlhhz.js
+// include: /tmp/tmp9ys2sipv.js
 if (!Module["expectedDataFileDownloads"]) Module["expectedDataFileDownloads"] = 0;
 
 Module["expectedDataFileDownloads"]++;
@@ -146,6 +146,7 @@ Module["expectedDataFileDownloads"]++;
       Module["FS_createPath"]("/assets", "dr", true, true);
       Module["FS_createPath"]("/assets", "midair", true, true);
       Module["FS_createPath"]("/assets", "plr_animWithGunAttacks", true, true);
+      Module["FS_createPath"]("/assets", "plr_animWithGunCalm", true, true);
       Module["FS_createPath"]("/assets", "plr_animWithSwordAttacks", true, true);
       Module["FS_createPath"]("/assets/plr_animWithSwordAttacks", "Down", true, true);
       Module["FS_createPath"]("/assets/plr_animWithSwordAttacks", "DownRight", true, true);
@@ -346,228 +347,252 @@ Module["expectedDataFileDownloads"]++;
   }
   loadPackage({
     "files": [ {
-      "filename": "/assets/bloodstain.png",
+      "filename": "/assets/Center.gif",
       "start": 0,
-      "end": 76044
+      "end": 4096
+    }, {
+      "filename": "/assets/bloodstain.png",
+      "start": 4096,
+      "end": 80140
     }, {
       "filename": "/assets/dr/frame1.png",
-      "start": 76044,
-      "end": 81893
+      "start": 80140,
+      "end": 85989
     }, {
       "filename": "/assets/dr/frame2.png",
-      "start": 81893,
-      "end": 88786
+      "start": 85989,
+      "end": 92882
     }, {
       "filename": "/assets/dr/frame3.png",
-      "start": 88786,
-      "end": 95458
+      "start": 92882,
+      "end": 99554
+    }, {
+      "filename": "/assets/gunIdle.gif",
+      "start": 99554,
+      "end": 123799
     }, {
       "filename": "/assets/midair/frame1.png",
-      "start": 95458,
-      "end": 105812
+      "start": 123799,
+      "end": 134153
     }, {
       "filename": "/assets/midair/frame2.png",
-      "start": 105812,
-      "end": 116166
+      "start": 134153,
+      "end": 144507
     }, {
       "filename": "/assets/midair/frame3.png",
-      "start": 116166,
-      "end": 126520
+      "start": 144507,
+      "end": 154861
     }, {
       "filename": "/assets/plr_animWithGunAttacks/Left.gif",
-      "start": 126520,
-      "end": 147790
+      "start": 154861,
+      "end": 176131
+    }, {
+      "filename": "/assets/plr_animWithGunCalm/frame0.png",
+      "start": 176131,
+      "end": 182743
+    }, {
+      "filename": "/assets/plr_animWithGunCalm/frame1.png",
+      "start": 182743,
+      "end": 189355
+    }, {
+      "filename": "/assets/plr_animWithGunCalm/frame2.png",
+      "start": 189355,
+      "end": 196448
+    }, {
+      "filename": "/assets/plr_animWithGunCalm/frame3.png",
+      "start": 196448,
+      "end": 203541
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Down/frame0.gif",
-      "start": 147790,
-      "end": 151886
+      "start": 203541,
+      "end": 207637
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/DownRight/frame0.png",
-      "start": 151886,
-      "end": 155668
+      "start": 207637,
+      "end": 211419
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/DownRight/frame1.png",
-      "start": 155668,
-      "end": 160059
+      "start": 211419,
+      "end": 215810
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/DownRight/frame2.png",
-      "start": 160059,
-      "end": 164477
+      "start": 215810,
+      "end": 220228
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Right/frame0.png",
-      "start": 164477,
-      "end": 169251
+      "start": 220228,
+      "end": 225002
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Right/frame1.png",
-      "start": 169251,
-      "end": 174025
+      "start": 225002,
+      "end": 229776
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Right/frame2.png",
-      "start": 174025,
-      "end": 179117
+      "start": 229776,
+      "end": 234868
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Right/frame3.png",
-      "start": 179117,
-      "end": 184391
+      "start": 234868,
+      "end": 240142
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Up/frame1.png",
-      "start": 184391,
-      "end": 188318
+      "start": 240142,
+      "end": 244069
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Up/frame2.png",
-      "start": 188318,
-      "end": 192349
+      "start": 244069,
+      "end": 248100
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/Up/frame3.png",
-      "start": 192349,
-      "end": 196195
+      "start": 248100,
+      "end": 251946
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/UpRight.gif",
-      "start": 196195,
-      "end": 213367
+      "start": 251946,
+      "end": 269118
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/UpRight/frame1.png",
-      "start": 213367,
-      "end": 216778
+      "start": 269118,
+      "end": 272529
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/UpRight/frame2.png",
-      "start": 216778,
-      "end": 220406
+      "start": 272529,
+      "end": 276157
     }, {
       "filename": "/assets/plr_animWithSwordAttacks/UpRight/frame3.png",
-      "start": 220406,
-      "end": 224362
+      "start": 276157,
+      "end": 280113
     }, {
       "filename": "/assets/plr_animWithSwordCalm/frame0.png",
-      "start": 224362,
-      "end": 230740
+      "start": 280113,
+      "end": 286491
     }, {
       "filename": "/assets/plr_animWithSwordCalm/frame1.png",
-      "start": 230740,
-      "end": 237118
+      "start": 286491,
+      "end": 292869
     }, {
       "filename": "/assets/plr_animWithSwordCalm/frame2.png",
-      "start": 237118,
-      "end": 243496
+      "start": 292869,
+      "end": 299247
     }, {
       "filename": "/assets/plr_animWithSwordCalm/frame3.png",
-      "start": 243496,
-      "end": 249760
+      "start": 299247,
+      "end": 305511
     }, {
       "filename": "/assets/plr_animWithSwordCalm/frame4.png",
-      "start": 249760,
-      "end": 256024
+      "start": 305511,
+      "end": 311775
     }, {
       "filename": "/assets/plr_animWithSwordCalm/frame5.png",
-      "start": 256024,
-      "end": 262288
+      "start": 311775,
+      "end": 318039
     }, {
       "filename": "/assets/plr_animWithSwordIdle/frame0.png",
-      "start": 262288,
-      "end": 268281
+      "start": 318039,
+      "end": 324032
     }, {
       "filename": "/assets/plr_animWithSwordIdle/frame1.png",
-      "start": 268281,
-      "end": 274274
+      "start": 324032,
+      "end": 330025
     }, {
       "filename": "/assets/plr_animWithSwordIdle/frame2.png",
-      "start": 274274,
-      "end": 279172
+      "start": 330025,
+      "end": 334923
     }, {
       "filename": "/assets/plr_animWithSwordIdle/frame3.png",
-      "start": 279172,
-      "end": 285390
+      "start": 334923,
+      "end": 341141
     }, {
       "filename": "/assets/plr_animWithSwordIdle/frame4.png",
-      "start": 285390,
-      "end": 291608
+      "start": 341141,
+      "end": 347359
     }, {
       "filename": "/assets/plr_animWithSwordIdle/frame5.png",
-      "start": 291608,
-      "end": 296506
+      "start": 347359,
+      "end": 352257
     }, {
       "filename": "/assets/plr_animWithSwordLegsStaying/frame0.png",
-      "start": 296506,
-      "end": 300182
+      "start": 352257,
+      "end": 355933
     }, {
       "filename": "/assets/plr_animWithSwordLegsStaying/frame1.png",
-      "start": 300182,
-      "end": 303858
+      "start": 355933,
+      "end": 359609
     }, {
       "filename": "/assets/plr_animWithSwordLegsStaying/frame2.png",
-      "start": 303858,
-      "end": 307534
+      "start": 359609,
+      "end": 363285
     }, {
       "filename": "/assets/plr_animWithSwordLegsStaying/frame3.png",
-      "start": 307534,
-      "end": 311171
+      "start": 363285,
+      "end": 366922
     }, {
       "filename": "/assets/plr_animWithSwordLegsStaying/frame4.png",
-      "start": 311171,
-      "end": 314808
+      "start": 366922,
+      "end": 370559
     }, {
       "filename": "/assets/plr_animWithSwordLegsStaying/frame5.png",
-      "start": 314808,
-      "end": 318445
+      "start": 370559,
+      "end": 374196
     }, {
       "filename": "/assets/plr_animWithSwordLegsWalking/frame0.png",
-      "start": 318445,
-      "end": 323321
+      "start": 374196,
+      "end": 379072
     }, {
       "filename": "/assets/plr_animWithSwordLegsWalking/frame1.png",
-      "start": 323321,
-      "end": 328197
+      "start": 379072,
+      "end": 383948
     }, {
       "filename": "/assets/plr_animWithSwordLegsWalking/frame2.png",
-      "start": 328197,
-      "end": 333073
+      "start": 383948,
+      "end": 388824
     }, {
       "filename": "/assets/plr_animWithSwordLegsWalking/frame3.png",
-      "start": 333073,
-      "end": 337512
+      "start": 388824,
+      "end": 393263
     }, {
       "filename": "/assets/plr_animWithSwordLegsWalking/frame4.png",
-      "start": 337512,
-      "end": 341951
+      "start": 393263,
+      "end": 397702
     }, {
       "filename": "/assets/plr_animWithSwordLegsWalking/frame5.png",
-      "start": 341951,
-      "end": 346390
+      "start": 397702,
+      "end": 402141
     }, {
       "filename": "/assets/plr_animWithSwordMidAir/frame0.png",
-      "start": 346390,
-      "end": 353015
+      "start": 402141,
+      "end": 408766
     }, {
       "filename": "/assets/plr_animWithSwordMidAir/frame1.png",
-      "start": 353015,
-      "end": 359640
+      "start": 408766,
+      "end": 415391
     }, {
       "filename": "/assets/plr_animWithSwordMidAir/frame2.png",
-      "start": 359640,
-      "end": 366265
+      "start": 415391,
+      "end": 422016
     } ],
-    "remote_package_size": 366265,
-    "package_uuid": "sha256-4df70ee830069c8051f79d1b18b73209262fd4454122d6484cd5ef935559a766"
+    "remote_package_size": 422016,
+    "package_uuid": "sha256-3c7a98eed9c8656dff9cce8d81d95b4f2f167e1a3e929ab8ed58869acccbf46a"
   });
 })();
 
-// end include: /tmp/tmp_1uzlhhz.js
-// include: /tmp/tmpdodjoglr.js
+// end include: /tmp/tmp9ys2sipv.js
+// include: /tmp/tmp8_gh0atf.js
 // All the pre-js content up to here must remain later on, we need to run
 // it.
 if ((typeof ENVIRONMENT_IS_WASM_WORKER != "undefined" && ENVIRONMENT_IS_WASM_WORKER) || (typeof ENVIRONMENT_IS_PTHREAD != "undefined" && ENVIRONMENT_IS_PTHREAD) || (typeof ENVIRONMENT_IS_AUDIO_WORKLET != "undefined" && ENVIRONMENT_IS_AUDIO_WORKLET)) Module["preRun"] = [];
 
 var necessaryPreJSTasks = Module["preRun"].slice();
 
-// end include: /tmp/tmpdodjoglr.js
-// include: /tmp/tmpyaihv8qc.js
+// end include: /tmp/tmp8_gh0atf.js
+// include: /tmp/tmpsj3q0nuo.js
 if (!Module["preRun"]) throw "Module.preRun should exist because file support used it; did a pre-js delete it?";
 
 necessaryPreJSTasks.forEach(task => {
   if (Module["preRun"].indexOf(task) < 0) throw "All preRun tasks that exist before user pre-js code should remain after; did you replace Module or modify Module.preRun?";
 });
 
-// end include: /tmp/tmpyaihv8qc.js
+// end include: /tmp/tmpsj3q0nuo.js
 var arguments_ = [];
 
 var thisProgram = "./this.program";
@@ -10015,11 +10040,11 @@ var dynCall_iffii = makeInvalidEarlyAccess("dynCall_iffii");
 
 var dynCall_vi = makeInvalidEarlyAccess("dynCall_vi");
 
+var dynCall_vii = makeInvalidEarlyAccess("dynCall_vii");
+
 var dynCall_ii = makeInvalidEarlyAccess("dynCall_ii");
 
 var dynCall_iii = makeInvalidEarlyAccess("dynCall_iii");
-
-var dynCall_vii = makeInvalidEarlyAccess("dynCall_vii");
 
 var dynCall_i = makeInvalidEarlyAccess("dynCall_i");
 
@@ -10128,9 +10153,9 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports["dynCall_v"] != "undefined", "missing Wasm export: dynCall_v");
   assert(typeof wasmExports["dynCall_iffii"] != "undefined", "missing Wasm export: dynCall_iffii");
   assert(typeof wasmExports["dynCall_vi"] != "undefined", "missing Wasm export: dynCall_vi");
+  assert(typeof wasmExports["dynCall_vii"] != "undefined", "missing Wasm export: dynCall_vii");
   assert(typeof wasmExports["dynCall_ii"] != "undefined", "missing Wasm export: dynCall_ii");
   assert(typeof wasmExports["dynCall_iii"] != "undefined", "missing Wasm export: dynCall_iii");
-  assert(typeof wasmExports["dynCall_vii"] != "undefined", "missing Wasm export: dynCall_vii");
   assert(typeof wasmExports["dynCall_i"] != "undefined", "missing Wasm export: dynCall_i");
   assert(typeof wasmExports["dynCall_viii"] != "undefined", "missing Wasm export: dynCall_viii");
   assert(typeof wasmExports["dynCall_ji"] != "undefined", "missing Wasm export: dynCall_ji");
@@ -10197,9 +10222,9 @@ function assignWasmExports(wasmExports) {
   dynCall_v = dynCalls["v"] = createExportWrapper("dynCall_v", 1);
   dynCall_iffii = dynCalls["iffii"] = createExportWrapper("dynCall_iffii", 5);
   dynCall_vi = dynCalls["vi"] = createExportWrapper("dynCall_vi", 2);
+  dynCall_vii = dynCalls["vii"] = createExportWrapper("dynCall_vii", 3);
   dynCall_ii = dynCalls["ii"] = createExportWrapper("dynCall_ii", 2);
   dynCall_iii = dynCalls["iii"] = createExportWrapper("dynCall_iii", 3);
-  dynCall_vii = dynCalls["vii"] = createExportWrapper("dynCall_vii", 3);
   dynCall_i = dynCalls["i"] = createExportWrapper("dynCall_i", 1);
   dynCall_viii = dynCalls["viii"] = createExportWrapper("dynCall_viii", 4);
   dynCall_ji = dynCalls["ji"] = createExportWrapper("dynCall_ji", 2);
