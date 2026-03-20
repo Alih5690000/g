@@ -457,6 +457,7 @@ typedef struct Weapon{
     void(*onFire)(void*,Vector*);
     void(*asItem)(void*,SDL_FPoint*);
     void(*destroy)(void*);
+    void(*onReload)(void*);
 } Weapon;
 
 Video* CreateReversed(Video* o){
