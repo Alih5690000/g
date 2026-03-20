@@ -528,6 +528,10 @@ typedef struct Sword{
     SDL_Texture* txt;
 } Sword;
 
+void Sword_reload(void* obj){
+
+}
+
 void Sword_destroy(void* obj){
     Sword* o=(Sword*)obj;
     SDL_DestroyTexture(o->txt);
@@ -830,6 +834,18 @@ void Gun_destroy(void* obj){
     free(o);
 }
 
+void Gun_onReload(void* obj){
+    Gun* o=(Gun*)obj;
+    if (o->mags<=0){
+      emscripten_log(1,"No magazines left");
+      return;
+    }
+    o->cd=1.f;
+    o->mags--;
+    o->bulletsInMag=o->magSize;
+    return;
+}
+
 void Gun_onFire(void* obj,Vector* sprites){
     emscripten_log(1,"Gun onFire");
     Gun* o=(Gun*)obj;
@@ -839,13 +855,7 @@ void Gun_onFire(void* obj,Vector* sprites){
     }
     if (o->bulletsInMag<=0){
         emscripten_log(1,"No bullets in magazine");
-        if (o->mags<=0){
-            emscripten_log(1,"No magazines left");
-            return;
-        }
-        o->cd=1.f;
-        o->mags--;
-        o->bulletsInMag=o->magSize;
+        o->onReload(o);
         return;
     }
     emscripten_log(1,"shooting at dir %d",*o->base.dir);
@@ -1044,6 +1054,7 @@ Weapon* Gun_create(Sprite* owner,int magSize,
     res->mags=mags;
     res->cd=cooldown;
     res->base.onFire=Gun_onFire;
+    res->base.onReload=Gun_onReload;
     res->base.update=Gun_update;
     res->base.destroy=Gun_destroy;
     return (Weapon*)res;
