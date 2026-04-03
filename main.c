@@ -484,15 +484,15 @@ Vector* LoadPoses(const char* path,int fps){
     char buf[256];
     Vector_PushBack(res,&(Video*){NULL});
     snprintf(buf,256,"%s/Up",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt)});
+    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt,".png")});
     snprintf(buf,256,"%s/UpRight",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt)});
+    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt,".png")});
     snprintf(buf,256,"%s/Right",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt)});
+    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt,".png")});
     snprintf(buf,256,"%s/DownRight",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt)});
+    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt,".png")});
     snprintf(buf,256,"%s/Down",path);
-    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt)});
+    Vector_PushBack(res,&(Video*){Video_create(buf,renderer,fps,&dt,".png")});
     Vector_PushBack(res,&(Video*){CreateReversed(
         *(Video**)Vector_Get(res,DIR_DOWN_RIGHT)
     )});
@@ -1308,18 +1308,18 @@ int main(){
     Wtexture=SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_TARGET,1000,800);
     bloodstain=IMG_Load("assets/bloodstain.png");
-    plr_anim=Video_create("assets/plr_anim",renderer,12,&dt);
+    plr_anim=Video_create("assets/plr_anim",renderer,12,&dt,".png");
     plr_animWithSwordIdle=Video_create(
-        "assets/plr_animWithSwordIdle",renderer,6,&dt);
+        "assets/plr_animWithSwordIdle",renderer,6,&dt,".png");
     plr_animWithSwordAttack=CreateVector(sizeof(Video*));
     plr_animWithSwordCalm=Video_create(
-        "assets/plr_animWithSwordCalm",renderer,6,&dt);
+        "assets/plr_animWithSwordCalm",renderer,6,&dt,".png");
     plr_animWithSwordMidAir=Video_create(
-        "assets/plr_animWithSwordMidAir",renderer,6,&dt);
+        "assets/plr_animWithSwordMidAir",renderer,6,&dt,".png");
     plr_animWithSwordLegsWalking=Video_create(
-        "assets/plr_animWithSwordLegsWalking",renderer,6,&dt);
+        "assets/plr_animWithSwordLegsWalking",renderer,6,&dt,".png");
     plr_animWithSwordLegsStaying=Video_create(
-        "assets/plr_animWithSwordLegsStaying",renderer,6,&dt);
+        "assets/plr_animWithSwordLegsStaying",renderer,6,&dt,".png");
     plr_animWithSwordAttacks=LoadPoses("assets/plr_animWithSwordAttacks",6);
     start=SDL_GetTicks();
     end=SDL_GetTicks();
