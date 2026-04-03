@@ -83,7 +83,7 @@ typedef struct Video{
     float acc;
 } Video;
 
-Video* Video_create(const char* name, SDL_Renderer* r,int fps,float* dt){
+Video* Video_create(const char* name, SDL_Renderer* r,int fps,float* dt,char fmt[10]){
     if (!dulltxt){
         SDL_Surface* surf=SDL_CreateRGBSurfaceWithFormat(0,1,1,32,SDL_PIXELFORMAT_RGBA8888);
         SDL_FillRect(surf,NULL,0xFFFFFFFF);
@@ -107,7 +107,7 @@ Video* Video_create(const char* name, SDL_Renderer* r,int fps,float* dt){
             char tmp[20];
             snprintf(tmp,20,"%d",count);
             String_addc(str,tmp);
-            String_addc(str,".png");
+            String_addc(str,fmt);
             surf=IMG_Load(String_cstr(str));
             if (!surf){
                 break;
